@@ -17,6 +17,7 @@ import type {
   ReadingSession,
   DailyStats,
   ChatThread,
+  ReadingNote,
 } from '@/types';
 
 const PREFIX = 'maobible:';
@@ -99,6 +100,31 @@ export async function getAllBookmarks(): Promise<Bookmark[]> {
   );
 }
 
+/* ---------------- Reading notes ---------------- */
+
+export async function getAllNotes(): Promise<ReadingNote[]> {
+  const noteKeys = (await keys()).filter(
+    (k): k is string =>
+      typeof k === 'string' && k.startsWith(`${globalKey('note')}:`),
+  );
+  const all = await Promise.all(noteKeys.map((k) => safeGet<ReadingNote>(k)));
+  return all
+    .filter((note): note is ReadingNote => Boolean(note) && typeof note?.id === 'string')
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+export async function getArticleNotes(articleId: string): Promise<ReadingNote[]> {
+  return (await getAllNotes()).filter((note) => note.articleId === articleId);
+}
+
+export async function saveNote(note: ReadingNote): Promise<void> {
+  await safeSet(`${globalKey('note')}:${note.id}`, note);
+}
+
+export async function deleteNote(noteId: string): Promise<void> {
+  await safeDel(`${globalKey('note')}:${noteId}`);
+}
+
 /* ---------------- Reading progress ---------------- */
 
 export async function getReadingProgress(
@@ -107,8 +133,14 @@ export async function getReadingProgress(
   return safeGet<ReadingProgress>(key(articleId, 'progress'));
 }
 
+export const READING_PROGRESS_EVENT = 'maobible:progress-updated';
+
 export async function setReadingProgress(p: ReadingProgress): Promise<void> {
   await safeSet(key(p.articleId, 'progress'), p);
+  // 首页在阅读页卸载后才挂载，异步写入往往晚于它的首次读取，广播一下让它刷新。
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(READING_PROGRESS_EVENT, { detail: p }));
+  }
 }
 
 export async function getAllReadingProgress(): Promise<ReadingProgress[]> {
@@ -142,16 +174,9 @@ function localDateKey(iso: string): string {
 
 export async function recordSession(s: ReadingSession): Promise<void> {
   await safeSet(`${PREFIX}session:${s.startedAt}`, s);
-  // Also update the article's running total
-  const progress = await getReadingProgress(s.articleId);
-  const totalDurationMs = (progress?.totalDurationMs ?? 0) + s.durationMs;
-  await setReadingProgress({
-    articleId: s.articleId,
-    scrollFraction: progress?.scrollFraction ?? 0,
-    lastParagraphId: progress?.lastParagraphId,
-    updatedAt: new Date().toISOString(),
-    totalDurationMs,
-  });
+  // 这里不再回写 reading-progress：位置、更新时间与累计时长统一由
+  // Reader 在保存进度时一并写入。早期版本会用旧快照整体重写进度，
+  // 退出阅读页时刚好覆盖掉刚保存的 scrollFraction，首页“续读”就一直 0%。
   // Also bump the daily bucket
   await bumpDailyStats(s);
 }

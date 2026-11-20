@@ -2,6 +2,12 @@
 
 > Multi-language reader for Selected Works of Mao Zedong. See `docs/product-plan.md` for the full product brief.
 
+## Current personal-reader requirements
+
+- For the current Android personal-reader work, use `docs/prd-maozedong-selected-works-local-reader.md` as the source of truth. It supersedes conflicting older plans below, especially around recommendations, themes, English content, and reader controls.
+- Before changing UI, apply the `frontend-design` skill if available in the current Codex environment; do not rely on a machine-specific path.
+- Start UI work by deriving a compact visual direction and screen layout from the PRD, then review the first implemented screens with the user for concrete feedback before polishing. Keep the book contents and reading comfort central; avoid adding unrelated decorative or discovery UI.
+
 ## Stack
 
 - **React 18 + TypeScript + Vite 5** (PWA via `vite-plugin-pwa`)

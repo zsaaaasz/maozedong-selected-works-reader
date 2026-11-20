@@ -1,300 +1,178 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { ARTICLES } from '@/data/manifest';
-import { getAllReadingProgress, getAllBookmarks } from '@/lib/storage';
-import type { ArticleMetadata, ReadingProgress, Bookmark } from '@/types';
-
-/**
- * Shelf — 书架 (default tab).
- *
- * Single screen that pulls together everything the reader needs:
- *   1. 继续阅读 — last article + progress bar (or "开始第一篇" if no history)
- *   2. 今天读什么 — daily pick (date-stable, with interpretation)
- *   3. 主题浏览 — 5 chips (认识论 / 调查 / 革命 / 党建 / 形势)
- *   4. 全部文章 — 22 cards in 2-col grid (mobile)
- *   5. 我的收藏 — only if any bookmarks
- */
-const THEME_STORAGE_KEY = 'maobible.shelf-theme';
+import { VOLUMES } from '@/data/volumes';
+import { getAllReadingProgress, READING_PROGRESS_EVENT } from '@/lib/storage';
+import type { ReadingProgress } from '@/types';
 
 export function Shelf() {
   const [progress, setProgress] = useState<ReadingProgress[]>([]);
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
-  // Persist the theme filter across remounts (was: reset to 'all' every
-  // time the user switched tabs and came back, because Shelf unmounted).
-  const [theme, setTheme] = useState<string>(() => {
-    if (typeof window === 'undefined') return 'all';
-    return window.localStorage.getItem(THEME_STORAGE_KEY) ?? 'all';
-  });
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }, [theme]);
-
-  useEffect(() => {
-    void getAllReadingProgress().then(setProgress);
-    void getAllBookmarks().then(setBookmarks);
+    let active = true;
+    const load = () => {
+      void getAllReadingProgress().then((items) => {
+        if (active) setProgress(items);
+      });
+    };
+    load();
+    // 阅读页退出时的进度是异步落库的，挂载那一下常读到旧值，写完后再拉一次。
+    window.addEventListener(READING_PROGRESS_EVENT, load);
+    return () => {
+      active = false;
+      window.removeEventListener(READING_PROGRESS_EVENT, load);
+    };
   }, []);
 
-  // Last article with progress (continue reading)
-  const lastProgress = [...progress]
-    .filter((p) => p.scrollFraction > 0.01 && p.scrollFraction < 0.99)
-    .sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))[0];
-  const lastArticle = lastProgress
-    ? ARTICLES.find((a) => a.id === lastProgress.articleId)
-    : null;
-
-  // Daily pick — stable by date so user sees same pick all day
-  const dayOfYear = Math.floor(
-    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86_400_000,
+  const progressByArticle = useMemo(
+    () => new Map(progress.map((item) => [item.articleId, item])),
+    [progress],
   );
-  const dailyPick = ARTICLES[dayOfYear % ARTICLES.length];
-
-  // Theme filter
-  const themeFilters: { name: string; match: string[] }[] = [
-    { name: 'all', match: [] },
-    { name: '认识论 / 方法论', match: ['实践', '认识论', '辩证法', '矛盾', '实事求是', '分析'] },
-    { name: '调查 / 群众', match: ['调查', '群众', '组织', '工作方法', '领导力', '社会', '阶级'] },
-    { name: '革命战略 / 军事', match: ['战略', '战术', '持久战', '抗日', '战争', '游击'] },
-    { name: '党建 / 文风', match: ['党建', '文风', '学习', '教条', '经验', '党八股'] },
-    { name: '形势 / 民主', match: ['民主', '形势', '统一战线', '革命', '人民', '建国'] },
-  ];
-  const currentFilter = themeFilters.find((t) => t.name === theme) ?? themeFilters[0];
-  const filteredArticles =
-    currentFilter.name === 'all'
-      ? ARTICLES
-      : ARTICLES.filter((a) => a.themes.some((t) => currentFilter.match.includes(t)));
-
-  const bookmarkedIds = new Set(bookmarks.map((b) => b.articleId));
+  const lastProgress = useMemo(() => {
+    const list = progress.filter((item) => Number.isFinite(item.scrollFraction));
+    const sorted = list.slice().sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    // 优先“真的读过一点”的那篇；只是点开浏览过、位置还在开头的记录不参与竞争。
+    return sorted.find((item) => item.scrollFraction > 0.005) ?? sorted[0];
+  }, [progress]);
+  const lastArticle = ARTICLES.find((article) => article.id === lastProgress?.articleId);
+  const resumeArticle = lastArticle ?? ARTICLES[0];
+  const hasResume = Boolean(lastArticle && lastProgress);
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-8 py-4 sm:py-6 pb-2">
-      <header className="pb-3 sm:pb-4">
-        <h1 className="font-serif-cn text-2xl sm:text-3xl font-medium text-ink dark:text-dark-ink leading-tight">
-          毛选
-        </h1>
-        <p className="mt-1 text-xs sm:text-sm text-secondary dark:text-dark-secondary">
-          {ARTICLES.length} 篇 · 据人民出版社 1991 年版整理 · 中英双语
-        </p>
-      </header>
-
-      {/* 继续阅读 */}
-      <section className="mb-5 sm:mb-6">
-        <h2 className="text-[11px] sm:text-xs font-medium text-secondary dark:text-dark-secondary mb-2 tracking-wider">
-          继续阅读
-        </h2>
-        {lastArticle && lastProgress ? (
-          <Link
-            to={`/read/${lastArticle.id}`}
-            className="block rounded-card-lg border border-cinnabar/30 bg-cinnabar/5
-                       dark:bg-cinnabar/10 p-4 sm:p-5
-                       hover:border-cinnabar/60 active:scale-[0.99] transition-all"
-          >
-            <div className="flex items-baseline justify-between gap-2">
-              <h3 className="font-serif-cn text-base sm:text-lg font-medium text-ink dark:text-dark-ink">
-                {lastArticle.title}
-              </h3>
-              <span className="text-[10px] sm:text-xs text-secondary dark:text-dark-secondary shrink-0 tabular-nums">
-                {Math.round(lastProgress.scrollFraction * 100)}%
-              </span>
-            </div>
-            <div className="mt-2 h-1 bg-cinnabar/15 dark:bg-cinnabar/20 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-cinnabar transition-all"
-                style={{ width: `${Math.round(lastProgress.scrollFraction * 100)}%` }}
-              />
-            </div>
-            <p className="mt-2 text-[11px] sm:text-xs text-secondary dark:text-dark-secondary">
-              {lastProgress.lastParagraphId
-                ? `上次读到这里 · ${timeAgo(lastProgress.updatedAt)}`
-                : `${timeAgo(lastProgress.updatedAt)}`}
-            </p>
-          </Link>
-        ) : (
-          <Link
-            to={`/read/${ARTICLES[0].id}`}
-            className="block rounded-card-lg border border-ink/8 dark:border-dark-line
-                       bg-white/60 dark:bg-dark-ink/5 p-4 sm:p-5
-                       hover:border-cinnabar/40 active:scale-[0.99] transition-all"
-          >
-            <p className="text-sm text-ink dark:text-dark-ink">开始你的第一篇 →</p>
-            <p className="mt-1 text-xs text-secondary dark:text-dark-secondary">
-              推荐从「{ARTICLES[0].title}」读起
-            </p>
-          </Link>
-        )}
-      </section>
-
-      {/* 今天读什么 */}
-      <section className="mb-5 sm:mb-6">
-        <h2 className="text-[11px] sm:text-xs font-medium text-secondary dark:text-dark-secondary mb-2 tracking-wider">
-          今天读什么
-        </h2>
-        <Link
-          to={`/read/${dailyPick.id}`}
-          className="block rounded-card-lg border border-ink/8 dark:border-dark-line
-                     bg-white/60 dark:bg-dark-ink/5 p-4 sm:p-5
-                     hover:border-cinnabar/40 active:scale-[0.99] transition-all relative"
-        >
-          <span
-            className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-cinnabar"
+    <div className="mx-auto max-w-reader px-5 pb-8 sm:px-8">
+      <header className="relative isolate -mx-5 mb-3 bg-paper text-ink dark:bg-dark-paper dark:text-[#F2E7D6] sm:-mx-8 sm:mb-6">
+        {/* 整幅顶部图：版画肖像 + 朱红层叠山峦，按原比例铺满整行宽度 */}
+        <div className="relative overflow-hidden bg-[#0A0807] pt-[calc(max(env(safe-area-inset-top),24px)_+_8px)] sm:pt-0">
+          <img
+            src="/assets/hero-banner.webp"
+            alt="毛主席木刻版画像与朱红层叠山峦"
+            draggable={false}
+            className="pointer-events-none block h-auto w-full select-none object-fill"
+          />
+          {/* 顶缘收一道暗色，状态栏字母不落在亮处 */}
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-[calc(max(env(safe-area-inset-top),24px)_+_24px)] bg-[linear-gradient(to_bottom,rgba(10,8,7,1)_0%,rgba(10,8,7,1)_68%,rgba(10,8,7,0)_100%)]"
             aria-hidden
           />
-          <div className="flex items-baseline justify-between gap-2">
-            <h3 className="font-serif-cn text-base sm:text-lg font-medium text-ink dark:text-dark-ink">
-              {dailyPick.title}
-            </h3>
-            <span className="text-[10px] sm:text-xs text-secondary dark:text-dark-secondary tabular-nums shrink-0">
-              {dailyPick.writtenAt}
-            </span>
+          {/* 底缘溶进页面底色（浅色纸） */}
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-[30%] bg-[linear-gradient(to_top,#F5EEE5_0%,rgba(245,238,229,.94)_14%,rgba(245,238,229,.72)_34%,rgba(245,238,229,.4)_56%,rgba(245,238,229,.14)_78%,rgba(245,238,229,0)_100%)] dark:hidden"
+            aria-hidden
+          />
+          {/* 底缘溶进页面底色（深色近黑） */}
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-[20%] bg-[linear-gradient(to_top,#0D0A09_0%,rgba(13,10,9,.92)_22%,rgba(13,10,9,.66)_44%,rgba(13,10,9,.34)_66%,rgba(13,10,9,.1)_85%,rgba(13,10,9,0)_100%)] dark:block"
+            aria-hidden
+          />
+          {/* 标题压在肖像右侧的暗部，跟随图幅高度定位，任何宽度都在同一条视觉线上 */}
+          <div className="pointer-events-none absolute left-[38%] right-0 top-[calc(max(env(safe-area-inset-top),24px)_+_46px)] z-10 flex flex-col items-center text-center sm:left-[40%] sm:right-8 sm:top-[32%]">
+            <h1 className="font-serif-cn text-[2.3rem] font-semibold leading-[1.14] tracking-[0.02em] text-[#F2E7D6] [text-shadow:0_2px_16px_rgba(8,4,3,.9)] min-[380px]:text-[2.5rem] sm:text-[2.8rem] sm:tracking-[0.04em]">
+              毛泽东选集
+            </h1>
+            <div className="brush-underline mt-2.5 w-[100px] min-[380px]:w-[112px] sm:w-[132px]" aria-hidden />
           </div>
-          {dailyPick.interpretation && (
-            <p className="mt-1.5 text-[12px] sm:text-[13px] text-cinnabar/85 dark:text-cinnabar/80 leading-relaxed">
-              {dailyPick.interpretation}
-            </p>
-          )}
-          <p className="mt-2 text-[11px] sm:text-xs text-secondary dark:text-dark-secondary">
-            约 {dailyPick.readingMinutes} 分钟 →
-          </p>
-        </Link>
-      </section>
-
-      {/* 主题 */}
-      <section className="mb-5 sm:mb-6">
-        <h2 className="text-[11px] sm:text-xs font-medium text-secondary dark:text-dark-secondary mb-2 tracking-wider">
-          主题
-        </h2>
-        <div className="flex gap-2 overflow-x-auto scrollbar-none -mx-4 px-4 pb-1">
-          {themeFilters.map((t) => (
-            <button
-              key={t.name}
-              onClick={() => setTheme(t.name)}
-              className={[
-                'shrink-0 min-h-[44px] px-3 py-2 text-[12px] sm:text-sm rounded-full border transition-colors',
-                theme === t.name
-                  ? 'border-cinnabar text-cinnabar bg-cinnabar/5'
-                  : 'border-ink/10 dark:border-dark-line text-secondary dark:text-dark-secondary hover:border-cinnabar/40',
-              ].join(' ')}
-            >
-              {t.name === 'all' ? '全部' : t.name}
-            </button>
-          ))}
         </div>
-      </section>
+      </header>
 
-      {/* 全部文章 — 2 列 grid mobile, 3 列 sm+ */}
-      <section className="mb-5 sm:mb-6">
-        <h2 className="text-[11px] sm:text-xs font-medium text-secondary dark:text-dark-secondary mb-2 tracking-wider">
-          全部文章 ({filteredArticles.length})
-        </h2>
-        <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
-          {filteredArticles.map((a) => (
-            <ArticleCard
-              key={a.id}
-              article={a}
-              bookmarked={bookmarkedIds.has(a.id)}
-              progressFraction={
-                progress.find((p) => p.articleId === a.id)?.scrollFraction ?? 0
-              }
-            />
-          ))}
-        </ul>
-      </section>
-
-      {/* 收藏 */}
-      {bookmarks.length > 0 && (
-        <section className="mb-5">
-          <h2 className="text-[11px] sm:text-xs font-medium text-secondary dark:text-dark-secondary mb-2 tracking-wider">
-            收藏 ({bookmarks.length})
-          </h2>
-          <ul className="space-y-1.5">
-            {bookmarks.map((b) => {
-              const a = ARTICLES.find((x) => x.id === b.articleId);
-              if (!a) return null;
-              return (
-                <li key={b.articleId}>
-                  <Link
-                    to={`/read/${b.articleId}`}
-                    className="flex items-center justify-between rounded-card border border-ink/8
-                               bg-white/50 dark:bg-dark-ink/5 px-3 py-2.5 min-h-[44px]
-                               hover:border-cinnabar/40 active:scale-[0.99] transition-all"
-                  >
-                    <span className="font-serif-cn text-[13px] sm:text-sm text-ink dark:text-dark-ink truncate">
-                      ★ {a.title}
-                    </span>
-                    <span className="text-[10px] text-secondary dark:text-dark-secondary tabular-nums shrink-0 ml-2">
-                      {a.writtenAt}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+      {resumeArticle && (
+        <Link
+          to={'/read/' + resumeArticle.id}
+          className="group mb-5 flex min-h-[108px] items-center gap-3 rounded-[18px] border border-ink/10 bg-gradient-to-br from-[#FCF7EE] to-[#F4EBDC] px-3.5 py-3 text-ink transition-transform active:scale-[0.99] dark:border-[#3A2B26] dark:from-[#211816] dark:to-[#171110] dark:text-[#F2E7D6] sm:mb-9 sm:px-5 sm:py-4"
+        >
+          <span className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-full border border-cinnabar/45 text-cinnabar" aria-hidden>
+            <BookIcon />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-serif-cn text-[13px] tracking-[0.2em] text-[#C8544C]">
+              {hasResume ? '续读' : '开始'}
+            </span>
+            <span className="mt-1.5 block truncate font-serif-cn text-[22px] font-semibold leading-snug tracking-[0.02em]">
+              {hasResume ? resumeArticle.title : '从第一卷开始阅读'}
+            </span>
+            <span className="mt-1.5 block font-serif-cn text-[14px] leading-relaxed tracking-[0.03em] text-secondary dark:text-[#A99385]">
+              {hasResume
+                ? resumeArticle.volume?.replace('《毛泽东选集》', '') + '　·　已读 ' + Math.round((lastProgress?.scrollFraction ?? 0) * 100) + '%'
+                : '读过的文章和位置会保存在这里'}
+            </span>
+            {hasResume && (
+            <span className="mt-2 block h-[3px] overflow-hidden rounded-full bg-ink/12 dark:bg-[#33241F]">
+                <span
+                  className="block h-full rounded-full bg-cinnabar transition-[width] duration-500"
+                  style={{ width: Math.max(3, (lastProgress?.scrollFraction ?? 0) * 100) + '%' }}
+                />
+              </span>
+            )}
+          </span>
+          <span className="pr-0.5 font-serif-cn text-2xl leading-none text-cinnabar/80 transition-transform group-hover:translate-x-1" aria-hidden>›</span>
+        </Link>
       )}
 
-      <footer className="mt-8 pt-4 text-center text-[10px] sm:text-[11px] text-secondary dark:text-dark-secondary">
-        版本来源：人民出版社 1991 年版《毛泽东选集》
-      </footer>
+      <section aria-labelledby="volume-list-title" className="pb-4">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 id="volume-list-title" className="flex items-center gap-2.5 font-serif-cn text-[20px] font-semibold tracking-[0.06em] text-ink dark:text-dark-ink">
+            <span className="h-[26px] w-[3px] rounded-[2px] bg-cinnabar" aria-hidden />
+            按卷阅读
+          </h2>
+          <span className="font-serif-cn text-[14px] tracking-[0.04em] text-secondary dark:text-dark-secondary">{ARTICLES.length} 篇</span>
+        </div>
+
+        <ol className="space-y-2">
+          {VOLUMES.map((volume) => {
+            const articles = ARTICLES.filter((article) => article.volume === volume.fullTitle);
+            const completed = articles.filter(
+              (article) => (progressByArticle.get(article.id)?.scrollFraction ?? 0) >= 0.99,
+            ).length;
+            const volumeProgress = articles.length
+              ? articles.reduce((sum, article) => sum + (progressByArticle.get(article.id)?.scrollFraction ?? 0), 0) / articles.length
+              : 0;
+
+            return (
+              <li key={volume.id}>
+                <Link
+                  to={'/volume/' + volume.id}
+                  className="group flex min-h-[84px] items-center gap-3 rounded-[16px] border border-ink/10 bg-white/60 px-3 py-2 transition-[transform,border-color] active:scale-[0.99] dark:border-[#33241F] dark:bg-[#171110] sm:min-h-[100px] sm:gap-5 sm:px-4 sm:py-3"
+                >
+                  <span className="relative flex h-[64px] w-[78px] shrink-0 items-center justify-center overflow-hidden rounded-[10px] border border-[#D9B98F] bg-[#EED6B2] text-[#7E2A24] shadow-[0_4px_10px_rgba(0,0,0,0.28)] sm:h-[74px] sm:w-[90px]">
+                    <span className="absolute inset-y-0 left-0 w-2.5 bg-[#B02A2B] shadow-[2px_0_5px_rgba(60,18,15,0.35)]" />
+                    <span className="ml-1.5 text-center font-serif-cn leading-tight">
+                      <span className="block text-[12.5px] font-semibold tracking-[0.02em]">毛泽东选集</span>
+                      <span className="mt-1.5 block text-[12px] text-[#8E4A3C]">{volume.label}</span>
+                    </span>
+                  </span>
+
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-serif-cn text-[21px] font-semibold tracking-[0.02em] text-ink dark:text-dark-ink">
+                      {volume.label}
+                    </span>
+                    <span className="mt-1.5 block font-serif-cn text-[14px] tracking-[0.03em] text-secondary dark:text-dark-secondary">
+                      {articles.length} 篇
+                      {completed > 0 && <span>　已读完 {completed} 篇</span>}
+                    </span>
+                    {volumeProgress > 0.005 && (
+                      <span className="mt-2.5 block h-[3px] overflow-hidden rounded-full bg-ink/10 dark:bg-[#33241F]">
+                        <span
+                          className="block h-full rounded-full bg-cinnabar/85"
+                          style={{ width: (volumeProgress * 100) + '%' }}
+                        />
+                      </span>
+                    )}
+                  </span>
+                  <span className="pr-0.5 font-serif-cn text-2xl leading-none text-cinnabar/70 transition-transform group-hover:translate-x-1" aria-hidden>›</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
     </div>
   );
 }
 
-function ArticleCard({
-  article,
-  bookmarked,
-  progressFraction,
-}: {
-  article: ArticleMetadata;
-  bookmarked: boolean;
-  progressFraction: number;
-}) {
+function BookIcon() {
   return (
-    <motion.li
-      initial={{ opacity: 0, y: 4 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-    >
-      <Link
-        to={`/read/${article.id}`}
-        className="block relative rounded-card-lg border border-ink/8 dark:border-dark-line
-                   bg-white/60 dark:bg-dark-ink/5 p-3
-                   hover:border-cinnabar/40 active:scale-[0.99] transition-all min-h-[88px]"
-      >
-        {bookmarked && (
-          <span className="absolute top-1.5 right-1.5 text-cinnabar text-[10px]">★</span>
-        )}
-        <h3 className="font-serif-cn text-[13px] sm:text-sm font-medium text-ink dark:text-dark-ink leading-snug line-clamp-2 pr-3">
-          {article.title}
-        </h3>
-        <p className="mt-1.5 text-[10px] text-secondary dark:text-dark-secondary tabular-nums">
-          {article.writtenAt} · {article.readingMinutes} 分钟
-        </p>
-        {progressFraction > 0.01 && progressFraction < 0.99 && (
-          <div className="mt-1.5 h-0.5 bg-cinnabar/15 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-cinnabar"
-              style={{ width: `${Math.round(progressFraction * 100)}%` }}
-            />
-          </div>
-        )}
-        {progressFraction >= 0.99 && (
-          <p className="mt-1 text-[10px] text-moss">已读完</p>
-        )}
-      </Link>
-    </motion.li>
+    <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M3.5 5.5c3.4-1.1 6.2-.5 8.5 1.5v13c-2.3-2-5.1-2.6-8.5-1.5v-13Z" />
+      <path d="M20.5 5.5c-3.4-1.1-6.2-.5-8.5 1.5v13c2.3-2 5.1-2.6 8.5-1.5v-13Z" />
+    </svg>
   );
-}
-
-function timeAgo(iso: string): string {
-  const ms = Date.now() - new Date(iso).getTime();
-  const min = Math.floor(ms / 60_000);
-  if (min < 1) return '刚刚';
-  if (min < 60) return `${min} 分钟前`;
-  const h = Math.floor(min / 60);
-  if (h < 24) return `${h} 小时前`;
-  const d = Math.floor(h / 24);
-  if (d < 7) return `${d} 天前`;
-  return new Date(iso).toLocaleDateString('zh-CN');
 }

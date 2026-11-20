@@ -1,83 +1,117 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { Share } from '@capacitor/share';
 import { useArticle } from '@/hooks/useArticle';
-import { useContentLang } from '@/hooks/useContentLang';
 import {
-  getBookmark,
-  setBookmark,
   clearBookmark,
+  getArticleNotes,
+  getBookmark,
   getReadingProgress,
-  setReadingProgress,
   recordSession,
+  setBookmark,
+  setReadingProgress,
 } from '@/lib/storage';
 import { ARTICLES } from '@/data/manifest';
+import { getVolumeForArticle } from '@/data/volumes';
+import { findFootnoteReferences, findTextRange, footnoteNumberFromText } from '@/lib/footnotes';
 import { ParagraphView } from '@/components/ParagraphView';
 import { TopProgressBar } from '@/components/TopProgressBar';
-import { TocDrawer } from '@/components/TocDrawer';
-import { ParagraphAIDialog } from '@/components/ParagraphAIDialog';
-import { explainParagraph } from '@/services/ai';
-import type { LangCode, Paragraph } from '@/types';
+import { NotesDialog } from '@/components/NotesDialog';
+import type { Paragraph } from '@/types';
 
-type Mode = 'single' | 'bilingual';
+interface ExcerptTarget {
+  paragraphId: string;
+  quote: string;
+  startOffset?: number;
+  endOffset?: number;
+}
 
-/**
- * Reader v4 — title + AI 解读 + paragraphs + sticky toolbar.
- *
- * v4 changes from v3:
- *  - Top progress bar (auto-updates with scroll)
- *  - AI 解读 panel DEFAULT EXPANDED (interpretation visible from start)
- *  - TOC drawer (slide-up sheet with all paragraphs)
- *  - 段落点击 → AI 解释 dialog
- *  - Reading session recorded (durationMs tracked)
- */
+interface ReaderNavigationState {
+  from?: string;
+  openNotes?: boolean;
+  noteId?: string;
+  startOffset?: number;
+}
+
 export function Reader() {
   const { id = '' } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
+  const navigationState = location.state as ReaderNavigationState | null;
   const { article, loading, error } = useArticle(id);
-  const [contentLang, setContentLang] = useContentLang();
-  const [mode, setMode] = useState<Mode>('single');
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [showAI, setShowAI] = useState(true);
-  const [showToc, setShowToc] = useState(false);
-  const [aiParagraph, setAiParagraph] = useState<Paragraph | null>(null);
-  // Track the paragraph currently in view, so bookmark stores the
-  // right place (was: always paragraphs[0]?.id, which jumped users to
-  // the top of the article on resume).
-  const [activeParagraphId, setActiveParagraphId] = useState<string>('');
+  const [activeParagraphId, setActiveParagraphId] = useState('');
+  const [selectedExcerpt, setSelectedExcerpt] = useState<ExcerptTarget | null>(null);
+  const [noteTarget, setNoteTarget] = useState<ExcerptTarget | null>(null);
+  const [showNotes, setShowNotes] = useState(false);
+  const [footnotesOpen, setFootnotesOpen] = useState(true);
   const articleRef = useRef<HTMLElement | null>(null);
   const lastSaveRef = useRef(0);
-  const sessionStartRef = useRef<number>(Date.now());
-  // Holds the inner highlight-removal timer for hash-jump, so we can
-  // cancel it on unmount / nav-away (was: leaked setTimeout per jump).
+  const sessionStartRef = useRef(Date.now());
   const highlightTimerRef = useRef<number | null>(null);
+  const excerptCleanupRef = useRef<(() => void) | null>(null);
+  /** 点按浮条时系统会清掉原生选区，这里用一个短暂的保护期挡住 selectionchange 的清空。 */
+  const selectionGuardRef = useRef(0);
 
   const meta = article?.metadata;
-  const currentIndex = useMemo(
-    () => ARTICLES.findIndex((a) => a.id === id),
-    [id],
+  const primary = article?.translations['zh-CN'];
+  const allParagraphs = primary?.paragraphs ?? [];
+  const footnotes = useMemo(
+    () => allParagraphs.filter((paragraph) => paragraph.kind === 'note'),
+    [allParagraphs],
   );
-  const prevArticle = currentIndex > 0 ? ARTICLES[currentIndex - 1] : null;
-  const nextArticle =
-    currentIndex >= 0 && currentIndex < ARTICLES.length - 1
-      ? ARTICLES[currentIndex + 1]
-      : null;
+  const bodyParagraphs = useMemo(
+    () => allParagraphs.filter(
+      (paragraph) => paragraph.kind !== 'note'
+        && !(paragraph.kind === 'heading' && paragraph.text.trim() === '注释'),
+    ),
+    [allParagraphs],
+  );
+  const footnoteNumbers = useMemo(
+    () => new Set(footnotes.map((paragraph) => footnoteNumberFromText(paragraph.text)).filter(
+      (number): number is number => number !== null,
+    )),
+    [footnotes],
+  );
+  const footnoteReferences = useMemo(
+    () => findFootnoteReferences(bodyParagraphs, footnoteNumbers),
+    [bodyParagraphs, footnoteNumbers],
+  );
+  const referencesByPosition = new Map(
+    footnoteReferences.map((reference) => [
+      `${reference.paragraphId}:${reference.offset}`,
+      reference.id,
+    ]),
+  );
+  const firstReferenceByNumber = new Map<number, string>();
+  for (const reference of footnoteReferences) {
+    if (!firstReferenceByNumber.has(reference.number)) {
+      firstReferenceByNumber.set(reference.number, reference.id);
+    }
+  }
+
+  const currentIndex = useMemo(() => ARTICLES.findIndex((item) => item.id === id), [id]);
+  const previousArticle = currentIndex > 0 ? ARTICLES[currentIndex - 1] : null;
+  const nextArticle = currentIndex >= 0 && currentIndex < ARTICLES.length - 1
+    ? ARTICLES[currentIndex + 1]
+    : null;
+  const volume = getVolumeForArticle(meta);
+  const backPath = navigationState?.from ?? `/volume/${volume.id}`;
 
   useEffect(() => {
-    if (!meta?.title) return;
-    document.title = `${meta.title} · 毛选`;
+    if (meta?.title) document.title = `${meta.title} · 毛泽东选集`;
   }, [meta?.title]);
 
   useEffect(() => {
     if (!id) return;
-    void getBookmark(id).then((b) => setIsBookmarked(Boolean(b)));
+    void getBookmark(id).then((bookmark) => setIsBookmarked(Boolean(bookmark)));
     sessionStartRef.current = Date.now();
+    setActiveParagraphId('');
+    setSelectedExcerpt(null);
+    setNoteTarget(null);
+    setShowNotes(false);
     return () => {
-      // Record session on unmount
       const durationMs = Date.now() - sessionStartRef.current;
       if (durationMs > 5_000) {
         void recordSession({
@@ -90,166 +124,252 @@ export function Reader() {
   }, [id]);
 
   useEffect(() => {
-    if (!article || !articleRef.current) return;
-    const el = articleRef.current;
+    if (!primary || !articleRef.current) return;
+    const container = articleRef.current;
     let restored = false;
     let userTouched = false;
-    const saveCurrentProgress = () => {
-      if (!restored) return;
-      const frac =
-        el.scrollHeight > el.clientHeight
-          ? el.scrollTop / (el.scrollHeight - el.clientHeight)
-          : 0;
-      const paragraphs = el.querySelectorAll<HTMLElement>('[data-para-id]');
-      let activeId: string | undefined;
-      for (const p of paragraphs) {
-        const rect = p.getBoundingClientRect();
-        if (rect.bottom >= 112) {
-          activeId = p.dataset.paraId;
-          break;
-        }
+    let hasProgress = false;
+    let baseDurationMs = 0;
+    // 卸载时 React 会先清空 article 的子节点，scrollHeight 塌缩使 scrollTop 被钳到 0，
+    // 所以滚动过程中就把进度记下来，卸载时用最后一份有效值，别现算。
+    let lastFraction = 0;
+    let lastParaId: string | undefined;
+
+    const measureFraction = (): number | null => {
+      if (!container.isConnected) return null;
+      const scrollable = container.scrollHeight - container.clientHeight;
+      if (scrollable <= 0) return null;
+      return container.scrollTop / scrollable;
+    };
+
+    const firstVisibleParaId = (): string | undefined => {
+      if (!container.isConnected) return undefined;
+      const paragraphs = container.querySelectorAll<HTMLElement>(
+        '[data-selectable="true"][data-para-id]',
+      );
+      for (const paragraph of paragraphs) {
+        if (paragraph.getBoundingClientRect().bottom >= 112) return paragraph.dataset.paraId;
       }
-      if (activeId) setActiveParagraphId(activeId);
-      void setReadingProgress({
+      return undefined;
+    };
+
+    const track = () => {
+      const fraction = measureFraction();
+      if (fraction !== null) lastFraction = Math.max(0, Math.min(1, fraction));
+      const paraId = firstVisibleParaId();
+      if (paraId) lastParaId = paraId;
+    };
+
+    const saveProgress = () => {
+      if (!restored) return undefined;
+      track();
+      const fraction = lastFraction;
+      // 只是打开文章、还没往下读时不要写入 0%，否则会把首页“续读”指到
+      // 这篇刚点开又退出的文章，覆盖掉真正的阅读位置。
+      if (fraction <= 0 && !hasProgress) return undefined;
+      if (lastParaId) setActiveParagraphId(lastParaId);
+      hasProgress = true;
+      return setReadingProgress({
         articleId: id,
-        scrollFraction: Math.max(0, Math.min(1, frac)),
+        scrollFraction: fraction,
         updatedAt: new Date().toISOString(),
-        lastParagraphId: activeId,
+        lastParagraphId: lastParaId,
+        // 累计时长跟着进度一起写，避免 recordSession 另做一次读改写。
+        totalDurationMs: baseDurationMs + (Date.now() - sessionStartRef.current),
       });
     };
 
-    void getReadingProgress(id).then((p) => {
-      if (p && !userTouched) {
-        // Only auto-restore if the user hasn't already scrolled. Previously
-        // this ran on first frame and would yank the reader back to a stale
-        // scrollFraction if they had already started reading.
-        const target = Math.max(
-          0,
-          p.scrollFraction * (el.scrollHeight - el.clientHeight),
-        );
-        el.scrollTo({ top: target, behavior: 'auto' });
-      }
-      restored = true;
-    });
+      void getReadingProgress(id).then((saved) => {
+        if (saved && !userTouched && !location.hash && !navigationState?.openNotes) {
+          // 优先按比例精确回位；没有比例时再退回段落锚点。
+          if (saved.scrollFraction > 0.001) {
+            const scrollable = container.scrollHeight - container.clientHeight;
+            container.scrollTo({ top: Math.max(0, saved.scrollFraction * scrollable), behavior: 'auto' });
+          } else if (saved.lastParagraphId) {
+            const lastParagraph = container.querySelector<HTMLElement>(
+              '[data-para-id="' + CSS.escape(saved.lastParagraphId) + '"]',
+            );
+            lastParagraph?.scrollIntoView({ behavior: 'auto', block: 'start' });
+          }
+          lastFraction = saved.scrollFraction;
+          lastParaId = saved.lastParagraphId;
+        }
+        if (saved) hasProgress = true;
+        baseDurationMs = saved?.totalDurationMs ?? 0;
+        restored = true;
+        saveProgress();
+      });
     const onScroll = () => {
       userTouched = true;
+      track();
       const now = Date.now();
-      if (now - lastSaveRef.current < 1000) return;
+      if (now - lastSaveRef.current < 1_000) return;
       lastSaveRef.current = now;
-      saveCurrentProgress();
+      saveProgress();
     };
     const onVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') saveCurrentProgress();
+      if (document.visibilityState === 'hidden') saveProgress();
     };
-    el.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('pagehide', saveCurrentProgress);
+    container.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('pagehide', saveProgress);
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
-      saveCurrentProgress();
-      el.removeEventListener('scroll', onScroll);
-      window.removeEventListener('pagehide', saveCurrentProgress);
+      saveProgress();
+      container.removeEventListener('scroll', onScroll);
+      window.removeEventListener('pagehide', saveProgress);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [article, id]);
+  }, [id, location.hash, navigationState?.openNotes, primary]);
 
-  // Hash-based jump from Discover page: /read/{id}#{paragraphId} → scroll
-  // to that paragraph and briefly highlight it.
+  useEffect(() => {
+    if (!article || !location.hash) return;
+    const paragraphId = decodeURIComponent(location.hash.slice(1));
+    const timer = window.setTimeout(() => {
+      const target = articleRef.current?.querySelector<HTMLElement>(
+        `[data-para-id="${CSS.escape(paragraphId)}"]`,
+      );
+      if (!target) return;
+      excerptCleanupRef.current?.();
+      excerptCleanupRef.current = null;
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      target.classList.add('reader-note-highlight');
+
+      const startOffset = navigationState?.startOffset;
+      const quote = (location.state as { quote?: string } | null)?.quote;
+      if (typeof startOffset === 'number' && quote) {
+        const range = findTextRange(target, startOffset, startOffset + quote.length);
+        if (range) excerptCleanupRef.current = flashExcerpt(target, range);
+      }
+
+      if (highlightTimerRef.current !== null) window.clearTimeout(highlightTimerRef.current);
+      highlightTimerRef.current = window.setTimeout(() => {
+        excerptCleanupRef.current?.();
+        excerptCleanupRef.current = null;
+        target.classList.remove('reader-note-highlight');
+        highlightTimerRef.current = null;
+      }, 1_800);
+    }, 100);
+    return () => {
+      window.clearTimeout(timer);
+      if (highlightTimerRef.current !== null) {
+        window.clearTimeout(highlightTimerRef.current);
+        highlightTimerRef.current = null;
+      }
+      excerptCleanupRef.current?.();
+      excerptCleanupRef.current = null;
+    };
+  }, [article, id, location.hash, location.key, location.state, navigationState?.startOffset, navigationState?.openNotes]);
+
   useEffect(() => {
     if (!article) return;
-    const hash = location.hash.replace(/^#/, '');
-    if (!hash) return;
-    // Wait one frame so DOM is ready (paragraphs just rendered above).
-    const t = window.setTimeout(() => {
-      const el = articleRef.current?.querySelector<HTMLElement>(
-        `[data-para-id="${hash}"]`,
-      );
-      if (!el) return;
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // Highlight: add ring, then remove after 1.6s. The inner timer is
-      // stashed in highlightTimerRef so we can cancel it on unmount /
-      // re-render (previously: leaked, could fire on a detached node and
-      // leave the ring class stuck on a re-entered same-article mount).
-      el.classList.add(
-        'ring-2',
-        'ring-cinnabar/40',
-        'ring-offset-2',
-        'ring-offset-paper',
-        'dark:ring-offset-dark-paper',
-        'rounded',
-        'transition',
-      );
-      if (highlightTimerRef.current != null) {
-        window.clearTimeout(highlightTimerRef.current);
-      }
-      highlightTimerRef.current = window.setTimeout(() => {
-        el.classList.remove(
-          'ring-2',
-          'ring-cinnabar/40',
-          'ring-offset-2',
-          'ring-offset-paper',
-          'dark:ring-offset-dark-paper',
-        );
-        highlightTimerRef.current = null;
-      }, 1600);
-    }, 80);
-    return () => {
-      window.clearTimeout(t);
-      if (highlightTimerRef.current != null) {
-        window.clearTimeout(highlightTimerRef.current);
-        highlightTimerRef.current = null;
-      }
+    let debounceTimer: number | null = null;
+    const onSelectionChange = () => {
+      if (debounceTimer !== null) window.clearTimeout(debounceTimer);
+      debounceTimer = window.setTimeout(() => {
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed || !selection.rangeCount) {
+          if (Date.now() < selectionGuardRef.current) return;
+          setSelectedExcerpt(null);
+          return;
+        }
+        const range = selection.getRangeAt(0);
+        if (!articleRef.current?.contains(range.commonAncestorContainer)) {
+          if (Date.now() < selectionGuardRef.current) return;
+          setSelectedExcerpt(null);
+          return;
+        }
+        const startNode = range.startContainer.nodeType === Node.ELEMENT_NODE
+          ? range.startContainer as Element
+          : range.startContainer.parentElement;
+        const paragraph = startNode?.closest<HTMLElement>('[data-selectable="true"][data-para-id]')
+          ?? startNode?.closest<HTMLElement>('[data-para-id]');
+        if (!paragraph?.dataset.paraId) {
+          if (Date.now() < selectionGuardRef.current) return;
+          setSelectedExcerpt(null);
+          return;
+        }
+
+        const rawQuote = selection.toString();
+        const quote = rawQuote.trim();
+        if (!quote || !quote.replace(/[\s。，、；：！？…—·．“”‘’《》〈〉（）()\-.,;:!?~"'*]/g, '')) {
+          if (Date.now() < selectionGuardRef.current) return;
+          setSelectedExcerpt(null);
+          return;
+        }
+        const leadingWhitespace = rawQuote.indexOf(quote);
+        const prefix = document.createRange();
+        prefix.selectNodeContents(paragraph);
+        prefix.setEnd(range.startContainer, range.startOffset);
+        const startOffset = prefix.toString().length + Math.max(0, leadingWhitespace);
+        const paragraphLength = paragraph.textContent?.length ?? startOffset;
+        const endOffset = Math.min(paragraphLength, startOffset + quote.length);
+
+        setSelectedExcerpt({
+          paragraphId: paragraph.dataset.paraId,
+          quote,
+          startOffset,
+          endOffset,
+        });
+      }, 120);
     };
-  }, [article, location.hash, id]);
+
+    document.addEventListener('selectionchange', onSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', onSelectionChange);
+      if (debounceTimer !== null) window.clearTimeout(debounceTimer);
+    };
+  }, [article]);
+
+  useEffect(() => {
+    if (!article || !navigationState?.openNotes) return;
+    let cancelled = false;
+    void getArticleNotes(id).then((notes) => {
+      if (cancelled) return;
+      const note = notes.find((item) => item.id === navigationState.noteId);
+      if (note) {
+        setNoteTarget({
+          paragraphId: note.paragraphId,
+          quote: note.quote,
+          startOffset: note.startOffset,
+          endOffset: note.endOffset,
+        });
+      }
+      setShowNotes(true);
+    });
+    return () => { cancelled = true; };
+  }, [article, id, location.key, navigationState?.noteId, navigationState?.openNotes]);
 
   if (loading) {
-    return (
-      <div className="max-w-3xl mx-auto px-5 sm:px-8 py-12 text-secondary text-sm">
-        加载中
-      </div>
-    );
+    return <div className="px-5 py-12 text-sm text-secondary dark:text-dark-secondary">正在打开文章…</div>;
   }
-  if (error || !article) {
+  if (error || !article || !primary) {
     return (
-      <div className="max-w-3xl mx-auto px-5 sm:px-8 py-12">
-        <p className="text-cinnabar text-sm">未找到该文章。</p>
-        <Link
-          to="/"
-          className="text-sm text-secondary hover:text-ink mt-3 inline-block"
-        >
-          ← 返回
+      <div className="px-5 py-12">
+        <p className="text-sm text-cinnabar">没有找到这篇文章。</p>
+        <Link to="/" className="mt-3 inline-flex min-h-11 items-center text-sm text-moss dark:text-moss">
+          返回目录
         </Link>
       </div>
     );
   }
 
-  const primary = article.translations[contentLang];
-  // If the user picked bilingual but the secondary translation is missing
-  // (e.g. this article only has zh-CN), fall back to single so the page
-  // doesn't silently render a single-column layout under a "bilingual"
-  // toolbar. We show a small notice so the user knows why.
-  const bilingualRequested = mode === 'bilingual';
-  const bilingualAvailable = bilingualRequested
-    ? Boolean(article.translations[otherLang(contentLang)])
-    : false;
-  const showBilingual = bilingualRequested && bilingualAvailable;
-  const secondary = showBilingual
-    ? article.translations[otherLang(contentLang)]
-    : null;
-  const secondaryCode = otherLang(contentLang) as LangCode;
-  const secondaryByParagraphId = new Map(
-    secondary?.paragraphs.map((paragraph) => [paragraph.id, paragraph]) ?? [],
-  );
+  const openSelectedExcerpt = () => {
+    if (!selectedExcerpt) return;
+    // 收起系统选区工具条，避免它压在笔记面板上。
+    window.getSelection()?.removeAllRanges();
+    setActiveParagraphId(selectedExcerpt.paragraphId);
+    setNoteTarget(selectedExcerpt);
+    setSelectedExcerpt(null);
+    setShowNotes(true);
+  };
 
   const toggleBookmark = async () => {
     if (isBookmarked) {
       await clearBookmark(id);
       setIsBookmarked(false);
     } else {
-      // Use the paragraph currently in view, falling back to the first
-      // body paragraph (so the bookmark always lands somewhere meaningful
-      // — was: always paragraphs[0]?.id, which sent users to the top).
-      const fallback = primary?.paragraphs.find((p) => p.kind === 'body')?.id
-        ?? primary?.paragraphs[0]?.id
+      const fallback = bodyParagraphs.find((paragraph) => paragraph.kind === 'body')?.id
+        ?? bodyParagraphs[0]?.id
         ?? '';
       await setBookmark({
         articleId: id,
@@ -263,305 +383,254 @@ export function Reader() {
     }
   };
 
-  const shareArticle = async () => {
-    const title = meta?.title ?? '毛选';
-    const text = [
-      `《${title}》`,
-      meta?.interpretation,
-      '来自「毛选」阅读器',
-    ].filter(Boolean).join('\n\n');
-
-    try {
-      if (Capacitor.isNativePlatform()) {
-        await Share.share({ title, text, dialogTitle: '分享文章' });
-        return;
-      }
-      if (navigator.share) {
-        await navigator.share({ title, text, url: window.location.href });
-      } else {
-        await navigator.clipboard.writeText(`${text}\n\n${window.location.href}`);
-      }
-    } catch {
-      // Closing the system share sheet is a normal user action.
-    }
+  const scrollToFootnote = (number: number) => {
+    articleRef.current?.querySelector<HTMLElement>(`#footnote-${number}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
+  const scrollToReference = (referenceId: string | undefined) => {
+    if (!referenceId) return;
+    articleRef.current?.querySelector<HTMLElement>(`#${CSS.escape(referenceId)}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  const noteExcerpt = noteTarget?.quote ?? '';
+
   return (
-    <article
-      ref={articleRef}
-      className="app-surface h-full overflow-y-auto overscroll-y-contain
-                 max-w-3xl mx-auto px-4 sm:px-8 pb-[calc(2rem+env(safe-area-inset-bottom))]"
-    >
-      {/* Top progress bar — fixed to top of viewport */}
-      <TopProgressBar containerRef={articleRef} />
-
-      {/* Sticky toolbar — horizontally scrollable on 320px screens
-          (7 buttons + 1 back chevron overflowed on small Android). */}
-      <div
-        className="sticky top-0 z-20 -mx-4 sm:-mx-8 px-3 sm:px-8 pb-1.5
-                   pt-[calc(.375rem+env(safe-area-inset-top))]
-                   backdrop-blur-md bg-paper/85 dark:bg-dark-paper/85
-                   border-b border-ink/5 dark:border-dark-line
-                   flex items-center gap-1 overflow-x-auto scrollbar-none"
+    <>
+      <article
+        ref={articleRef}
+        className="app-surface mx-auto h-full max-w-3xl overflow-y-auto overscroll-y-contain px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] sm:px-8"
       >
-        <button
-          onClick={() => navigate(-1)}
-          className="min-w-[44px] min-h-[44px] flex items-center justify-center
-                     text-ink/75 dark:text-dark-ink/75 hover:text-ink dark:hover:text-dark-ink
-                     active:scale-95 transition-all"
-          aria-label="返回"
-        >
-          <span className="text-lg">←</span>
-        </button>
-        <button
-          onClick={() => setShowToc(true)}
-          className="min-h-[44px] px-2.5 rounded-card text-xs text-secondary dark:text-dark-secondary
-                     border border-ink/10 dark:border-dark-line
-                     hover:border-cinnabar/40 active:scale-95 transition-all"
-          title="目录"
-        >
-          ☰ 目录
-        </button>
-        <div className="flex-1 min-w-0" />
-        <ToolbarButton
-          label={contentLang === 'zh-CN' ? '中' : 'EN'}
-          active={false}
-          onClick={() => setContentLang(otherLang(contentLang))}
-          title="切换内容语言"
-        />
-        <ToolbarButton
-          label={mode === 'bilingual' ? '单语' : '双语'}
-          active={mode === 'bilingual'}
-          onClick={() => setMode((m) => (m === 'single' ? 'bilingual' : 'single'))}
-          title="双语对照"
-        />
-        <ToolbarButton
-          label="AI"
-          active={showAI}
-          onClick={() => setShowAI((s) => !s)}
-          title="AI 解读"
-        />
-        <ToolbarButton
-          label="分享"
-          active={false}
-          onClick={() => void shareArticle()}
-          title="分享文章"
-        />
-        <ToolbarButton
-          label={isBookmarked ? '★' : '☆'}
-          active={isBookmarked}
-          onClick={() => void toggleBookmark()}
-          title={isBookmarked ? '取消收藏' : '收藏'}
-          isIcon
-        />
-      </div>
+        <TopProgressBar containerRef={articleRef} />
 
-      <header className="pt-4 sm:pt-6 pb-4 sm:pb-5">
-        <h1 className="font-serif-cn text-[1.65rem] sm:text-3xl font-medium text-ink dark:text-dark-ink leading-tight text-balance">
-          {meta?.title}
-        </h1>
-        {meta?.subtitle && (
-          <p className="mt-1.5 sm:mt-2 text-[13px] sm:text-base text-secondary dark:text-dark-secondary font-serif-cn">
-            {meta.subtitle}
-          </p>
-        )}
-        <p className="mt-2 sm:mt-3 text-[11px] sm:text-xs text-secondary dark:text-dark-secondary">
-          {meta?.author} · {meta?.writtenAt} · {meta?.volume} · 约 {meta?.readingMinutes} 分钟
-        </p>
-      </header>
-
-      {/* AI 解读 — default expanded */}
-      <AnimatePresence>
-        {showAI && meta?.interpretation && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="mb-4"
+        <div className="sticky top-0 z-20 -mx-5 flex min-h-[62px] items-center justify-between border-b border-ink/8 bg-paper/95 px-2 pt-[env(safe-area-inset-top)] backdrop-blur-md dark:border-dark-line dark:bg-dark-paper/92 sm:-mx-8 sm:px-6">
+          <button
+            type="button"
+            onClick={() => navigate(backPath)}
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-ink/85 transition-transform active:scale-95 dark:text-dark-ink/85"
+            aria-label="返回目录"
           >
-            <div className="rounded-card-lg border border-cinnabar/30 bg-cinnabar/5 dark:bg-cinnabar/10 px-4 py-3">
-              <div className="flex items-center justify-between mb-1">
-                <div className="text-[11px] text-cinnabar/80 tracking-wider flex items-center gap-1">
-                  <span>🤖</span> AI 解读
-                </div>
-                <button
-                  onClick={() => setShowAI(false)}
-                  className="text-[10px] text-secondary hover:text-cinnabar transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2 -my-2"
-                  aria-label="关闭解读"
-                >
-                  ✕
-                </button>
-              </div>
-              <p className="text-[15px] sm:text-base text-ink dark:text-dark-ink font-serif-cn leading-relaxed">
-                {meta.interpretation}
-              </p>
-              <Link
-                to="/ask"
-                className="mt-1 inline-flex min-h-[44px] items-center text-[11px] sm:text-xs text-cinnabar/85 hover:text-cinnabar transition-colors"
-              >
-                去回应页继续问 →
-              </Link>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <BackIcon />
+          </button>
+          <span className="min-w-0 flex-1 px-2 text-center">
+            <span className="line-clamp-1 block font-serif-cn text-[15px] font-semibold leading-snug tracking-[0.02em] text-ink dark:text-dark-ink">
+              {meta?.title}
+            </span>
+            <span className="mt-0.5 block font-serif-cn text-[10px] leading-tight tracking-[0.18em] text-secondary dark:text-dark-secondary">
+              {volume.label}
+            </span>
+          </span>
+          <button
+            type="button"
+            onClick={() => void toggleBookmark()}
+            className={[
+              'flex min-h-11 min-w-11 items-center justify-center rounded-full transition-[color,transform] active:scale-95',
+              isBookmarked ? 'text-cinnabar' : 'text-secondary dark:text-dark-secondary',
+            ].join(' ')}
+            aria-label={isBookmarked ? '取消书签' : '添加书签'}
+            aria-pressed={isBookmarked}
+          >
+            <BookmarkIcon active={isBookmarked} />
+          </button>
+        </div>
 
-      {/* Hint about AI paragraph tap */}
-      <p className="mb-3 text-[11px] sm:text-xs text-secondary dark:text-dark-secondary">
-        点按任一段落，看 AI 白话翻译
-      </p>
+        <header className="pb-1 pt-6 sm:pt-8">
+          <p className="font-serif-cn text-[11px] tracking-[0.14em] text-secondary dark:text-dark-secondary">
+            {meta?.author}　{meta?.writtenAt}
+          </p>
+        </header>
 
-      {bilingualRequested && !bilingualAvailable && (
-        <p className="mb-3 rounded-card border border-ink/8 dark:border-dark-line
-                      bg-secondary/5 dark:bg-dark-ink/5 px-3 py-2
-                      text-[11px] sm:text-xs text-secondary dark:text-dark-secondary">
-          这篇文章暂无{contentLang === 'zh-CN' ? '英文' : '中文'}对照译文，已自动按单语显示。
-        </p>
-      )}
-
-      {showBilingual && secondary ? (
-        <section aria-label="逐段双语对照" className="divide-y divide-ink/8 dark:divide-dark-line">
-          {primary?.paragraphs.map((paragraph) => {
-            const pairedParagraph = secondaryByParagraphId.get(paragraph.id);
-            return (
-              <div
-                key={paragraph.id}
-                className="grid py-2 md:grid-cols-2 md:gap-10 md:py-0"
-              >
-                <div className="md:border-r md:border-ink/8 md:pr-8">
-                  <ParagraphView
-                    p={paragraph}
-                    lang={contentLang}
-                    onTap={contentLang === 'zh-CN' ? () => setAiParagraph(paragraph) : undefined}
-                  />
-                </div>
-                {pairedParagraph ? (
-                  <div className="border-l-2 border-moss/20 pl-3 md:border-l-0 md:pl-0">
-                    <ParagraphView p={pairedParagraph} lang={secondaryCode} />
-                  </div>
-                ) : (
-                  <p className="my-3.5 text-sm text-secondary dark:text-dark-secondary md:my-5">
-                    该段暂无对照译文
-                  </p>
-                )}
-              </div>
-            );
-          })}
-        </section>
-      ) : (
-        <section>
-          {primary?.paragraphs.map((paragraph) => (
+        <section aria-label="文章正文">
+          {bodyParagraphs.map((paragraph: Paragraph) => (
             <ParagraphView
               key={paragraph.id}
               p={paragraph}
-              lang={contentLang}
-              onTap={contentLang === 'zh-CN' ? () => setAiParagraph(paragraph) : undefined}
+              lang="zh-CN"
+              footnoteNumbers={footnoteNumbers}
+              footnoteReferenceIds={referencesByPosition}
+              onFootnoteJump={scrollToFootnote}
             />
           ))}
         </section>
+
+        {footnotes.length > 0 && (
+          <section aria-labelledby="footnotes-heading" className="mt-14 border-t border-ink/12 pt-6 dark:border-dark-line sm:mt-16 sm:pt-7">
+            <button
+              type="button"
+              onClick={() => setFootnotesOpen((open) => !open)}
+              aria-expanded={footnotesOpen}
+              className="flex min-h-9 w-full items-center justify-between gap-3 text-left"
+            >
+              <h2 id="footnotes-heading" className="font-serif-cn text-[15px] font-semibold tracking-[0.2em] text-ink dark:text-dark-ink">
+                注释
+              </h2>
+              <ChevronIcon open={footnotesOpen} />
+            </button>
+            {footnotesOpen && (
+              <ol className="mt-3 space-y-4">
+                {footnotes.map((footnote) => {
+                  const number = footnoteNumberFromText(footnote.text);
+                  const body = footnote.text.replace(/^\s*〔\d+〕\s*/, '');
+                  const referenceId = number === null ? undefined : firstReferenceByNumber.get(number);
+                  return (
+                    <li
+                      key={footnote.id}
+                      id={number === null ? undefined : `footnote-${number}`}
+                      data-para-id={footnote.id}
+                      className="scroll-mt-24 flex gap-3 text-[13.5px] leading-[1.95] text-secondary dark:text-dark-secondary"
+                    >
+                      <span className="mt-[0.1em] flex h-[1.55em] min-w-[1.55em] shrink-0 items-center justify-center rounded-full border border-cinnabar/45 px-[0.32em] font-serif-cn text-[0.78em] font-semibold leading-none text-cinnabar">
+                        {number ?? '·'}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        {body}
+                        {referenceId && (
+                          <button
+                            type="button"
+                            onClick={() => scrollToReference(referenceId)}
+                            className="footnote-backlink ml-1 inline-flex min-h-8 min-w-8 items-center justify-center align-middle text-cinnabar"
+                            aria-label={`返回正文注释标记${number}`}
+                          >
+                            ↩
+                          </button>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </section>
+        )}
+
+        <nav className="mt-14 flex justify-between gap-4 border-t border-ink/10 pt-5 text-sm dark:border-dark-line sm:mt-16 sm:pt-6">
+          {previousArticle ? (
+            <Link to={`/read/${previousArticle.id}`} state={{ from: backPath }} className="group min-w-0 flex-1">
+              <span className="block font-serif-cn text-[10px] tracking-[0.16em] text-secondary dark:text-dark-secondary">上一篇</span>
+              <span className="mt-1.5 block truncate font-serif-cn text-[14px] text-ink group-hover:text-cinnabar dark:text-dark-ink dark:group-hover:text-cinnabar">
+                {previousArticle.title}
+              </span>
+            </Link>
+          ) : <span className="flex-1" />}
+          {nextArticle ? (
+            <Link to={`/read/${nextArticle.id}`} state={{ from: backPath }} className="group min-w-0 flex-1 text-right">
+              <span className="block font-serif-cn text-[10px] tracking-[0.16em] text-secondary dark:text-dark-secondary">下一篇</span>
+              <span className="mt-1.5 block truncate font-serif-cn text-[14px] text-ink group-hover:text-cinnabar dark:text-dark-ink dark:group-hover:text-cinnabar">
+                {nextArticle.title}
+              </span>
+            </Link>
+          ) : <span className="flex-1" />}
+        </nav>
+      </article>
+
+      {/* 贴底会落进系统手势区，手指一点就被判成上滑，所以抬到手势条之上。 */}
+      {selectedExcerpt && !showNotes && (
+        <div className="fixed inset-x-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-reader items-center gap-3 px-4">
+          <div className="flex min-h-14 min-w-0 flex-1 items-center rounded-[20px] border border-ink/10 bg-paper/95 px-3 shadow-[0_14px_36px_rgba(0,0,0,0.2)] backdrop-blur dark:border-[#493B37] dark:bg-[#211C1A]/95">
+            <span className="line-clamp-2 min-w-0 flex-1 font-serif-cn text-xs leading-relaxed text-secondary dark:text-dark-secondary">
+              {selectedExcerpt.quote}
+            </span>
+            <button
+              type="button"
+              onPointerDown={(event) => {
+                event.preventDefault();
+                selectionGuardRef.current = Date.now() + 900;
+              }}
+              onClick={openSelectedExcerpt}
+              className="ml-3 min-h-10 shrink-0 rounded-full bg-cinnabar px-4 text-sm font-medium text-white shadow-[0_4px_10px_rgba(190,45,46,0.25)] active:scale-95"
+            >
+              记笔记
+            </button>
+            <button
+              type="button"
+              onPointerDown={(event) => {
+                event.preventDefault();
+                selectionGuardRef.current = Date.now() + 900;
+              }}
+              onClick={() => setSelectedExcerpt(null)}
+              className="ml-1 flex min-h-10 min-w-8 items-center justify-center text-secondary dark:text-dark-secondary"
+              aria-label="取消选中"
+            >
+              ×
+            </button>
+          </div>
+        </div>
       )}
 
-      <section
-        aria-label="版本与来源"
-        className="mt-10 rounded-card-lg border border-ink/8 dark:border-dark-line bg-white/35 dark:bg-dark-ink/5 p-4 text-[11px] sm:text-xs leading-relaxed text-secondary dark:text-dark-secondary"
-      >
-        <h2 className="font-medium text-ink/80 dark:text-dark-ink/80">版本与来源</h2>
-        <p className="mt-1">{primary?.source ?? '来源待补充'}</p>
-        {primary?.translator && <p className="mt-1">译者：{primary.translator}</p>}
-        {primary?.licenseNote && <p className="mt-1">{primary.licenseNote}</p>}
-        <p className="mt-1">内容状态：{primary?.status ?? 'unknown'}</p>
-        {secondary && (
-          <div className="mt-3 border-t border-ink/8 dark:border-dark-line pt-3">
-            <p>{secondary.source ?? '对照版本来源待补充'}</p>
-            {secondary.translator && <p className="mt-1">译者：{secondary.translator}</p>}
-            {secondary.licenseNote && <p className="mt-1">{secondary.licenseNote}</p>}
-            <p className="mt-1">内容状态：{secondary.status}</p>
-          </div>
-        )}
-      </section>
-
-      <nav className="mt-12 sm:mt-16 pt-6 border-t border-ink/8 flex justify-between gap-4 text-sm">
-        {prevArticle ? (
-          <Link to={`/read/${prevArticle.id}`} className="flex-1 min-w-0 group">
-            <div className="text-xs text-secondary dark:text-dark-secondary">
-              ← 上一篇
-            </div>
-            <div className="mt-1 font-serif-cn text-ink dark:text-dark-ink group-hover:text-cinnabar transition-colors line-clamp-1 text-sm sm:text-base">
-              {prevArticle.title}
-            </div>
-          </Link>
-        ) : (
-          <div className="flex-1" />
-        )}
-        {nextArticle ? (
-          <Link to={`/read/${nextArticle.id}`} className="flex-1 min-w-0 group text-right">
-            <div className="text-xs text-secondary dark:text-dark-secondary">
-              下一篇 →
-            </div>
-            <div className="mt-1 font-serif-cn text-ink dark:text-dark-ink group-hover:text-cinnabar transition-colors line-clamp-1 text-sm sm:text-base">
-              {nextArticle.title}
-            </div>
-          </Link>
-        ) : (
-          <div className="flex-1" />
-        )}
-      </nav>
-
-      {/* TOC drawer */}
-      <TocDrawer
-        open={showToc}
-        onClose={() => setShowToc(false)}
-        article={article}
-        contentLang={contentLang}
-        onJump={(paraId) => {
-          const el = articleRef.current?.querySelector<HTMLElement>(
-            `[data-para-id="${paraId}"]`,
-          );
-          el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }}
-      />
-
-      {/* AI 解释 dialog for a paragraph */}
-      <ParagraphAIDialog
-        paragraph={aiParagraph}
-        onClose={() => setAiParagraph(null)}
-        explain={explainParagraph}
-      />
-    </article>
+      {showNotes && noteTarget && (
+        <NotesDialog
+          articleId={id}
+          articleTitle={article.metadata.title}
+          paragraphId={noteTarget.paragraphId}
+          excerpt={noteExcerpt}
+          startOffset={noteTarget.startOffset}
+          endOffset={noteTarget.endOffset}
+          initialNoteId={navigationState?.openNotes ? navigationState.noteId : undefined}
+          onClose={() => {
+            setShowNotes(false);
+            setNoteTarget(null);
+          }}
+        />
+      )}
+    </>
   );
 }
 
-function otherLang(l: LangCode): LangCode {
-  return l === 'zh-CN' ? 'en' : 'zh-CN';
+function BackIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="m14.5 5-7 7 7 7" />
+    </svg>
+  );
 }
 
-function ToolbarButton({
-  label,
-  active,
-  onClick,
-  title,
-  isIcon,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-  title: string;
-  isIcon?: boolean;
-}) {
+function ChevronIcon({ open }: { open: boolean }) {
   return (
-    <button
-      onClick={onClick}
-      title={title}
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
       className={[
-        'min-h-[44px] min-w-[44px] px-2.5 rounded-card border transition-colors active:scale-95',
-        isIcon ? 'text-base' : 'text-xs',
-        active
-          ? 'border-cinnabar text-cinnabar bg-cinnabar/5'
-          : 'border-ink/10 dark:border-dark-line hover:border-cinnabar/40',
+        'text-secondary transition-transform duration-200 dark:text-dark-secondary',
+        open ? 'rotate-180' : '',
       ].join(' ')}
     >
-      {label}
-    </button>
+      <path d="m5 9 7 7 7-7" />
+    </svg>
   );
+}
+
+function BookmarkIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M6.5 3.75h11a1 1 0 0 1 1 1V21l-6.5-4-6.5 4V4.75a1 1 0 0 1 1-1Z" />
+    </svg>
+  );
+}
+
+function flashExcerpt(
+  paragraph: HTMLElement,
+  range: Range,
+): () => void {
+  const browserWindow = window as Window & {
+    Highlight?: new (...ranges: Range[]) => object;
+  };
+  const highlightStore = (window.CSS as unknown as {
+    highlights?: { set: (name: string, value: object) => void; delete: (name: string) => void };
+  }).highlights;
+  if (browserWindow.Highlight && highlightStore) {
+    highlightStore.set('reader-note', new browserWindow.Highlight(range));
+    return () => {
+      highlightStore.delete('reader-note');
+    };
+  }
+  paragraph.classList.add('reader-note-highlight');
+  return () => paragraph.classList.remove('reader-note-highlight');
 }

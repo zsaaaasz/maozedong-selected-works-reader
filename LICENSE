@@ -25,12 +25,12 @@ THE SOFTWARE.
 Important — content license (NOT covered by the MIT grant above):
 
 The Chinese source text in `public/content/*.json` is taken from 人民出版社
-1991 年第 2 版《毛泽东选集》. This is public-domain source material in
-the People's Republic of China as of the time of transcription, but the
-rights status has not been re-confirmed for online distribution outside
-China. Before distributing the app or a derivative build outside the
-research / non-commercial envelope, see `docs/content-release-audit.md` and
-obtain a written authorization or a jurisdiction-specific legal opinion.
+1991 年第 2 版《毛泽东选集》. The project owner states that authorization
+for public distribution of the Chinese text included in this repository and
+APK has been confirmed as of 2026-11-20. This statement is separate from the
+MIT software license and does not grant downstream users blanket rights to
+reuse or republish the text or edition-specific material; consult the relevant
+rightsholder and authorization terms before further distribution.
 
 The English translations in `public/content/*.json` under
 `translations.en` are LLM-generated drafts (`status: draft`). They are NOT

@@ -1,6 +1,23 @@
 import { useEffect, useState } from 'react';
-import type { Article } from '@/types';
+import type { Article, LangCode } from '@/types';
 import { getArticleMeta } from '@/data/manifest';
+
+/**
+ * 正文段落在部分内容 JSON 里只写了 id/text，没有 kind 字段。
+ * 缺省一律按 body 处理，否则会出现：正文没有 2em 缩进、
+ * 选字时找不到可注释段落、脚注标记不渲染。
+ */
+function normalizeParagraphKinds(article: Article): Article {
+  (Object.keys(article.translations) as LangCode[]).forEach((lang) => {
+    const translation = article.translations[lang];
+    if (!translation?.paragraphs) return;
+    translation.paragraphs = translation.paragraphs.map((paragraph) => ({
+      ...paragraph,
+      kind: paragraph.kind ?? 'body',
+    }));
+  });
+  return article;
+}
 
 /**
  * Fetches article content from /public/content/{id}.json.
@@ -44,7 +61,7 @@ export function useArticle(articleId: string | undefined) {
         // Merge manifest metadata over JSON metadata so the rich
         // interpretation/situations live alongside the article text.
         a.metadata = { ...a.metadata, ...meta };
-        setArticle(a);
+        setArticle(normalizeParagraphKinds(a));
         setLoading(false);
       })
       .catch((e) => {

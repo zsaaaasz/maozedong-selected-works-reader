@@ -66,56 +66,96 @@
         {
           "id": "classes-010",
           "text": "综上所述，可知一切勾结帝国主义的军阀、官僚、买办阶级、大地主阶级以及附属于他们的一部分反动知识界，是我们的敌人。工业无产阶级是我们革命的领导力量。一切半无产阶级、小资产阶级，是我们最接近的朋友。那动摇不定的中产阶级，其右翼可能是我们的敌人，其左翼可能是我们的朋友——但我们要时常提防他们，不要让他们扰乱了我们的阵线。"
-        }
-      ]
-    },
-    "en": {
-      "language": "en",
-      "translator": "Foreign Languages Press (early translation, 1950s)",
-      "source": "Analysis of the Classes in Chinese Society, Selected Works of Mao Tse-tung, Vol. 1, FLP, 1954",
-      "licenseNote": "Based on the Foreign Languages Press English translation. Rights status has not been cleared for public distribution.",
-      "updatedAt": "2026-07-28",
-      "status": "published",
-      "paragraphs": [
-        {
-          "id": "classes-001",
-          "text": "Who Are Our Enemies? Who Are Our Friends?"
         },
         {
-          "id": "classes-002",
-          "text": "Who are our enemies? Who are our friends? This is a question of the first importance for the revolution. The basic reason why all previous revolutionary struggles in China achieved so little was their failure to unite with real friends in order to attack real enemies. A revolutionary party is the guide of the masses, and no revolution can succeed without the leadership of a revolutionary party that is not mistaken in its direction. If our revolution is to succeed in not going astray and to have a sure guarantee of victory, we must pay close attention to uniting with our real friends in order to attack our real enemies. To differentiate our friends from our enemies, we must make a general analysis of the economic status of the various classes in Chinese society and of their respective attitudes towards the revolution."
+          "id": "classes-analysis-1925-footnotes-title",
+          "kind": "heading",
+          "text": "注释"
         },
         {
-          "id": "classes-003",
-          "text": "The Landlord Class and the Comprador Class"
+          "id": "classes-analysis-1925-footnote-001",
+          "kind": "note",
+          "text": "〔1〕 国家主义派指中国青年党，当时以其外围组织“中国国家主义青年团”的名义公开进行活动。组织这个政团的是一些反动政客，他们投靠帝国主义和当权的反动派，把反对中国共产党和苏联当作职业。"
         },
         {
-          "id": "classes-004",
-          "text": "The landlord class and the comprador class. In economically backward semi-colonial China, the landlord class and the comprador class are entirely appendages of the international bourgeoisie; their existence and development depend upon imperialism. These classes represent the most backward and most reactionary relations of production in China and obstruct the development of her productive forces. They are completely hostile to the Chinese revolution. The big landlords and the big compradors in particular, who side with imperialism all the time, are extreme reactionaries. Their political representatives are the State Party and the right wing of the Kuomintang."
+          "id": "classes-analysis-1925-footnote-002",
+          "kind": "note",
+          "text": "〔2〕 戴季陶（一八九一——一九四九），又名传贤，原籍浙江湖州，生于四川广汉。早年参加中国同盟会，从事过反对清政府和袁世凯的活动。后曾和蒋介石在上海共同经营交易所的投机事业。一九二五年随着孙中山的逝世和革命高潮的到来，他歪曲孙中山学说的革命内容，散布反对国共合作、反对工农革命运动的谬论，为后来蒋介石的反共活动作了准备。一九二七年南京国民政府成立后，历任国民政府委员、考试院院长等职。一九四九年二月，蒋介石的统治即将崩溃，戴季陶感到绝望而自杀。"
         },
         {
-          "id": "classes-005",
-          "text": "The Middle Class"
+          "id": "classes-analysis-1925-footnote-003",
+          "kind": "note",
+          "text": "〔3〕 北京《晨报》，初名《晨钟报》，一九一六年八月创刊于北京，一九一八年十二月改名为《晨报》，一九二八年六月停刊。"
         },
         {
-          "id": "classes-006",
-          "text": "The middle class. This class represents the capitalist relations of production in town and country in China. The middle class mainly refers to the national bourgeoisie, which has a contradictory attitude towards the Chinese revolution: it is oppressed by foreign capital and harassed by the warlords and so feels the need for revolution and favours the anti-imperialist and anti-warlord revolutionary movement; but it is also suspicious of revolution the moment the latter grows strong enough to threaten its own class position, that is, when the Chinese proletariat takes a bold part in the revolution at home and the international proletariat extends active support to it abroad. Its political programme is to set up a state of one-class rule by the national bourgeoisie."
+          "id": "classes-analysis-1925-footnote-004",
+          "kind": "note",
+          "text": "〔4〕 一九二二年和一九二三年间，孙中山在共产党人的帮助下，决定改组国民党，实行国共合作，容纳共产党人参加国民党，并于一九二四年一月在广州召开国民党第一次全国代表大会，实行联俄、联共、扶助农工的三大政策。李大钊、谭平山、毛泽东、林伯渠、瞿秋白等共产党人参加了这次大会。他们曾经被选为国民党中央执行委员会的委员或候补委员，担任过国民党的许多领导工作，对于帮助国民党走上革命的道路，起了重大的作用。"
         },
         {
-          "id": "classes-007",
-          "text": "A self-styled \"true disciple\" of Tai Chi-tuo published an article in the Peking Morning Post saying: \"Raise your left hand to overthrow imperialism and your right hand to overthrow the Communist Party.\" These two sentences succinctly express the contradictions and the panic of this class. It opposes the interpretation of the Kuomintang's Principle of the People's Livelihood in terms of the class struggle; it is against the Kuomintang's alliance with Russia and the admission of Communists and Left-wing elements into the Kuomintang. But the attempt of this class to set up a state under the rule of the national bourgeoisie is quite impracticable, for the world situation today is one in which the two great forces, revolution and counter-revolution, are locked in final struggle. Those middle classes are bound to split up very rapidly, some turning to the left and joining the revolution, others to the right and joining the counter-revolution; there is no room for them to remain \"independent.\""
+          "id": "classes-analysis-1925-footnote-005",
+          "kind": "note",
+          "text": "〔5〕 第三国际即共产国际，一九一九年三月在列宁领导下成立。一九二二年中国共产党参加共产国际，成为它的一个支部。一九四三年五月，共产国际执行委员会主席团通过决定，提议解散共产国际，同年六月共产国际正式宣布解散。"
         },
         {
-          "id": "classes-008",
-          "text": "The Petty Bourgeoisie"
+          "id": "classes-analysis-1925-footnote-006",
+          "kind": "note",
+          "text": "〔6〕 国际联盟简称国联，一九二○年一月正式成立。先后参加的有六十多个国家。国际联盟标榜以“促进国际合作，维持国际和平与安全”为目的，实际上日益成为帝国主义国家推行侵略政策的工具。第二次世界大战爆发后无形瓦解，一九四六年四月正式宣布解散。"
         },
         {
-          "id": "classes-009",
-          "text": "The petty bourgeoisie. This includes the owner-peasants, the handicraftsmen, the lower stratum of the intelligentsia — students, primary and secondary school teachers, lower government employees, junior clerks, small lawyers, and small merchants. Both in numbers and in class character, this class deserves our close attention. The economy of the owner-peasants and the handicraftsmen is a small-production economy. Although the various sections of the petty bourgeoisie all occupy the same economic position, they fall into three different categories."
+          "id": "classes-analysis-1925-footnote-007",
+          "kind": "note",
+          "text": "〔7〕 这里是指中农。"
         },
         {
-          "id": "classes-010",
-          "text": "The first category is composed of those with a surplus in income. They are very eager to get rich and are devoutly devoted to the God of Wealth. Although they do not dream of becoming millionaires, they still want to climb up to the position of the middle class. Watching respected little bosses they often drool at the mouth. Such people are timid, afraid of the officials and somewhat afraid of revolution. Because their economic position is close to that of the middle class, they readily believe the latter's propaganda and are sceptical about the revolution. This section of the petty bourgeoisie, the right wing, is a small minority."
+          "id": "classes-analysis-1925-footnote-008",
+          "kind": "note",
+          "text": "〔8〕 赵公元帅是中国民间传说的财神，叫赵公明。"
+        },
+        {
+          "id": "classes-analysis-1925-footnote-009",
+          "kind": "note",
+          "text": "〔9〕 指一九二五年五月三十日爆发的反帝爱国运动。一九二五年五月间，上海、青岛的日本纱厂先后发生工人罢工的斗争，遭到日本帝国主义和北洋军阀的镇压。上海内外棉第七厂日本资本家在五月十五日枪杀了工人顾正红，并伤工人十余人。二十九日青岛工人被反动政府屠杀八人。五月三十日，上海二千余学生分头在公共租界各马路进行宣传讲演，一百余名遭巡捕（租界内的警察）逮捕，被拘押在南京路老闸巡捕房内，引起了学生和市民的极大愤慨，有近万人聚集在巡捕房门口，要求释放被捕学生。英帝国主义的巡捕向群众开枪，打死打伤许多人。这就是震惊中外的五卅惨案。六月，英日等帝国主义在上海和其他地方继续进行屠杀。这些屠杀事件激起了全国人民的公愤。广大的工人、学生和部分工商业者，在许多城市和县镇举行游行示威和罢工、罢课、罢市，形成了全国规模的反帝爱国运动高潮。"
+        },
+        {
+          "id": "classes-analysis-1925-footnote-010",
+          "kind": "note",
+          "text": "〔10〕 这里是指自己有一部分土地，同时租种一部分土地，或出卖一部分劳动力，或兼营小商的贫农。"
+        },
+        {
+          "id": "classes-analysis-1925-footnote-011",
+          "kind": "note",
+          "text": "〔11〕 店员有不同的阶层，他们一般不占有生产资料，生活来源的全部或者主要部分是依靠向店主出卖劳动力所取得的工资。毛泽东在这里所指的是店员中的一部分，还有一部分下层店员过着无产阶级的生活。"
+        },
+        {
+          "id": "classes-analysis-1925-footnote-012",
+          "kind": "note",
+          "text": "〔12〕 指一九二二年香港和上海的海员罢工。香港海员罢工爆发于一月十二日，坚持了八个星期。最后，香港英帝国主义当局被迫答应增加工资，恢复原工会，释放被捕工人，抚恤在罢工中死难烈士的家属。上海海员罢工于八月五日开始，坚持了三个星期，也得到胜利。"
+        },
+        {
+          "id": "classes-analysis-1925-footnote-013",
+          "kind": "note",
+          "text": "〔13〕 指一九二二年和一九二三年中国共产党领导的各主要铁路线的工人罢工。在罢工过程中，工人群众的觉悟迅速提高，要求改善生活的经济斗争迅速发展为反对军阀的政治斗争。一九二三年二月四日，京汉铁路工人为争取组织总工会的自由，举行总罢工。其他许多铁路的工人也纷纷响应。二月七日，英帝国主义支持的北洋军阀吴佩孚、萧耀南等，残酷地屠杀京汉铁路的工人，造成了二七惨案。"
+        },
+        {
+          "id": "classes-analysis-1925-footnote-014",
+          "kind": "note",
+          "text": "〔14〕 开滦煤矿是直隶省（今河北省）开平、滦县一带煤矿的总称，当时为英帝国主义者所控制。开滦罢工指一九二二年十月、十一月间矿工三万余人举行的大罢工。英帝国主义者和北洋军阀对这次罢工进行残酷的镇压，工人死伤很多，但是仍然坚持斗争。最后，英帝国主义者不得不答应给工人增加一部分工资。焦作煤矿，在河南省北部，当时也为英帝国主义者所控制。焦作罢工指一九二五年七月爆发的罢工。这次罢工是为响应五卅运动而发动的，前后坚持七个多月。最后，英帝国主义者不得不承认工会有代表工人的权利，并且被迫接受增加工资、不无故开除工人和补偿工人因罢工所受的损失等项条件。"
+        },
+        {
+          "id": "classes-analysis-1925-footnote-015",
+          "kind": "note",
+          "text": "〔15〕 沙面当时是英法帝国主义在广州的租界。一九二四年七月，统治沙面的帝国主义者颁布新警律，规定沙面的中国人出入租界必须携带贴有本人相片的执照，在租界内行动必须受各种苛刻的限制，但是外国人却可以自由出入活动。沙面工人于七月十五日宣告罢工，抗议这些无理措施。这次沙面罢工迫使英法帝国主义者取消了新警律。"
+        },
+        {
+          "id": "classes-analysis-1925-footnote-016",
+          "kind": "note",
+          "text": "〔16〕 指一九二五年六月一日开始的上海大罢工和六月十九日开始的香港大罢工。这两处罢工是当时全国反帝爱国运动的支柱。前者有二十多万工人参加，坚持了三四个月；后者有二十五万工人参加，坚持了一年零四个月，是截至当时为止的世界工人运动史中时间最长的一次罢工。"
+        },
+        {
+          "id": "classes-analysis-1925-footnote-017",
+          "kind": "note",
+          "text": "〔17〕 三合会、哥老会、大刀会、在理会、青帮是旧中国的一些民间秘密团体，参加者主要的是破产农民、失业手工业工人和流氓无产者。这类团体大都用宗教迷信为团聚成员的工具，采取家长制的组织形式，有的还拥有武装。参加这类团体的人，在社会生活中有互相援助的义务，有时还共同反抗压迫他们的地主、官僚和外国侵略者。但是，农民和手工业工人不可能依靠这类团体得到出路。同时，由于这类团体带有严重的封建性和盲目的破坏性，它们又往往容易被反动统治阶级和帝国主义势力所操纵和利用。随着工人阶级力量的壮大和中国共产党的成立，农民和手工业工人在共产党的领导之下逐步地建立了完全新式的群众组织，这类落后的团体就失掉了它们的存在价值。"
         }
       ]
     }

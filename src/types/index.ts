@@ -17,7 +17,8 @@ export type ParagraphKind = 'body' | 'heading' | 'note' | 'quote';
 
 export interface Paragraph {
   id: string;
-  kind: ParagraphKind;
+  /** 部分历史内容缺失该字段，读取后由 useArticle 归一化为 body。 */
+  kind?: ParagraphKind;
   text: string;
 }
 
@@ -63,6 +64,19 @@ export interface Bookmark {
   articleId: string;
   paragraphId: string;
   createdAt: string;
+}
+
+export interface ReadingNote {
+  id: string;
+  articleId: string;
+  paragraphId: string;
+  quote: string;
+  /** Character offsets in the anchored paragraph for precise return navigation. */
+  startOffset?: number;
+  endOffset?: number;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ReadingProgress {

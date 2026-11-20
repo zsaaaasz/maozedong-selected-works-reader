@@ -207,200 +207,56 @@
         {
           "id": "rps-046",
           "text": "趁着今天党校开学的机会，我讲了这许多话，希望同志们加以考虑。（热烈的鼓掌）"
-        }
-      ]
-    },
-    "en": {
-      "language": "en",
-      "translator": "Foreign Languages Press (early translation, 1950s)",
-      "source": "Rectify the Party's Style of Work, Selected Works of Mao Tse-tung, Vol. 3, FLP, 1954",
-      "licenseNote": "Machine translation draft (LLM-generated, not human-reviewed). Known issues: 0 empty paragraphs, 33 duplicate body paragraphs. Do not distribute until human review completes. Not the Foreign Languages Press edition (US copyright until 2049).",
-      "updatedAt": "2026-08-03",
-      "status": "draft",
-      "paragraphs": [
-        {
-          "id": "rps-001",
-          "text": "Oppose Subjectivism to Rectify the Style of Study"
         },
         {
-          "id": "rps-002",
-          "text": "Oppose Subjectivism to Rectify the Style of Study"
+          "id": "rectify-party-style-1942-footnotes-title",
+          "kind": "heading",
+          "text": "注释"
         },
         {
-          "id": "rps-003",
-          "text": "Oppose Subjectivism to Rectify the Style of Study"
+          "id": "rectify-party-style-1942-footnote-001",
+          "kind": "note",
+          "text": "〔1〕 八股文是中国明、清封建皇朝考试制度所规定的一种特殊文体。它内容空洞，专讲形式，玩弄文字。这种文章的每一个段落都要死守在固定的格式里面，连字数都有一定的限制，人们只是按照题目的字义敷衍成文。党八股是指在革命队伍中某些人在写文章、发表演说或者做其他宣传工作的时候，对事物不加分析，只是搬用一些革命的名词和术语，言之无物，空话连篇，也和上述的八股文一样。"
         },
         {
-          "id": "rps-004",
-          "text": "Oppose Subjectivism to Rectify the Style of Study"
+          "id": "rectify-party-style-1942-footnote-002",
+          "kind": "note",
+          "text": "〔2〕 指一九四一年八月一日《中央关于调查研究的决定》。这个决定要求全党采取具体措施，收集国内外政治、军事、经济、文化及社会阶级关系各方面的材料，加强对于历史，对于环境，对于国内外、省内外、县内外具体情况的调查研究，并将这种调查研究、了解情况的工作，同学习马克思列宁主义理论密切联系起来。"
         },
         {
-          "id": "rps-005",
-          "text": "The Party School opens today, and I want to say a few words about rectifying the Party's style of work. Subjectivism, sectarianism, and Party stereotypes — these three things are all anti-Marxist, are not needed by the proletariat, and are harmful to the Party and the people. We must launch a Party-wide struggle of the proletarian ideology against the non-proletarian, resolutely and thoroughly oppose subjectivism, oppose sectarianism, oppose Party stereotypes, and establish a Marxist, dialectical-materialist, proletarian-internationalist, mass-line, theory-and-practice-united style of study."
+          "id": "rectify-party-style-1942-footnote-003",
+          "kind": "note",
+          "text": "〔3〕 指一九三九年十二月一日中共中央关于吸收知识分子的决定，即本书第二卷《大量吸收知识分子》。"
         },
         {
-          "id": "rps-006",
-          "text": "The Party School opens today, and I want to say a few words about rectifying the Party's style of work. Subjectivism, sectarianism, and Party stereotypes — these three things are all anti-Marxist, are not needed by the proletariat, and are harmful to the Party and the people. We must launch a Party-wide struggle of the proletarian ideology against the non-proletarian, resolutely and thoroughly oppose subjectivism, oppose sectarianism, oppose Party stereotypes, and establish a Marxist, dialectical-materialist, proletarian-internationalist, mass-line, theory-and-practice-united style of study."
+          "id": "rectify-party-style-1942-footnote-004",
+          "kind": "note",
+          "text": "〔4〕 见本书第一卷《实践论》注〔10〕。"
         },
         {
-          "id": "rps-007",
-          "text": "The Party School opens today, and I want to say a few words about rectifying the Party's style of work. Subjectivism, sectarianism, and Party stereotypes — these three things are all anti-Marxist, are not needed by the proletariat, and are harmful to the Party and the people. We must launch a Party-wide struggle of the proletarian ideology against the non-proletarian, resolutely and thoroughly oppose subjectivism, oppose sectarianism, oppose Party stereotypes, and establish a Marxist, dialectical-materialist, proletarian-internationalist, mass-line, theory-and-practice-united style of study."
+          "id": "rectify-party-style-1942-footnote-005",
+          "kind": "note",
+          "text": "〔5〕 这是孔子和他的弟子们的语录《论语》的开头一句话。"
         },
         {
-          "id": "rps-008",
-          "text": "The Party School opens today, and I want to say a few words about rectifying the Party's style of work. Subjectivism, sectarianism, and Party stereotypes — these three things are all anti-Marxist, are not needed by the proletariat, and are harmful to the Party and the people. We must launch a Party-wide struggle of the proletarian ideology against the non-proletarian, resolutely and thoroughly oppose subjectivism, oppose sectarianism, oppose Party stereotypes, and establish a Marxist, dialectical-materialist, proletarian-internationalist, mass-line, theory-and-practice-united style of study."
+          "id": "rectify-party-style-1942-footnote-006",
+          "kind": "note",
+          "text": "〔6〕 见本书第一卷《论反对日本帝国主义的策略》注〔24〕。"
         },
         {
-          "id": "rps-009",
-          "text": "There are still some unhealthy tendencies in our style of study. What is the style of study? It is the tendency in learning. Our study should be one that combines theory with practice. We oppose subjectivism because subjectivism is anti-scientific, anti-Marxist. It does not start from objective reality, but from subjective desire; it is not seeking truth from facts, but self-opinionated; it is not combining theory with practice, but separating them. Our study must resolutely oppose this subjectivist style of study."
+          "id": "rectify-party-style-1942-footnote-007",
+          "kind": "note",
+          "text": "〔7〕 这段话的新译文是：“老干部总是少数，不能满足需要，而且由于自然界的天然规律，他们已经部分地开始丧失工作能力。”（《斯大林选集》下卷，人民出版社1979年版，第460页）"
         },
         {
-          "id": "rps-010",
-          "text": "There are still some unhealthy tendencies in our style of study. What is the style of study? It is the tendency in learning. Our study should be one that combines theory with practice. We oppose subjectivism because subjectivism is anti-scientific, anti-Marxist. It does not start from objective reality, but from subjective desire; it is not seeking truth from facts, but self-opinionated; it is not combining theory with practice, but separating them. Our study must resolutely oppose this subjectivist style of study."
+          "id": "rectify-party-style-1942-footnote-008",
+          "kind": "note",
+          "text": "〔8〕 参见斯大林《在党的第十八次代表大会上关于联共（布）中央工作的总结报告》第三部分第二节（《斯大林选集》下卷，人民出版社1979年版，第460页）。"
         },
         {
-          "id": "rps-011",
-          "text": "There are still some unhealthy tendencies in our style of study. What is the style of study? It is the tendency in learning. Our study should be one that combines theory with practice. We oppose subjectivism because subjectivism is anti-scientific, anti-Marxist. It does not start from objective reality, but from subjective desire; it is not seeking truth from facts, but self-opinionated; it is not combining theory with practice, but separating them. Our study must resolutely oppose this subjectivist style of study."
-        },
-        {
-          "id": "rps-012",
-          "text": "In order to oppose subjectivism, we must advocate seeking truth from facts. What is seeking truth from facts? \"Facts\" are all objective things that exist; \"truth\" is the internal connection of objective things, that is, the laws of things; \"seeking\" means that we must study. To seek truth from facts is to ask us to start from the objective facts that exist, to find from them their inherent laws, and to take these as our guide to action. This attitude is the Marxist attitude, the scientific attitude of dialectical materialism that unifies theory and practice."
-        },
-        {
-          "id": "rps-013",
-          "text": "In order to oppose subjectivism, we must advocate seeking truth from facts. What is seeking truth from facts? \"Facts\" are all objective things that exist; \"truth\" is the internal connection of objective things, that is, the laws of things; \"seeking\" means that we must study. To seek truth from facts is to ask us to start from the objective facts that exist, to find from them their inherent laws, and to take these as our guide to action. This attitude is the Marxist attitude, the scientific attitude of dialectical materialism that unifies theory and practice."
-        },
-        {
-          "id": "rps-014",
-          "text": "In order to oppose subjectivism, we must advocate seeking truth from facts. What is seeking truth from facts? \"Facts\" are all objective things that exist; \"truth\" is the internal connection of objective things, that is, the laws of things; \"seeking\" means that we must study. To seek truth from facts is to ask us to start from the objective facts that exist, to find from them their inherent laws, and to take these as our guide to action. This attitude is the Marxist attitude, the scientific attitude of dialectical materialism that unifies theory and practice."
-        },
-        {
-          "id": "rps-015",
-          "text": "In order to oppose subjectivism, we must advocate seeking truth from facts. What is seeking truth from facts? \"Facts\" are all objective things that exist; \"truth\" is the internal connection of objective things, that is, the laws of things; \"seeking\" means that we must study. To seek truth from facts is to ask us to start from the objective facts that exist, to find from them their inherent laws, and to take these as our guide to action. This attitude is the Marxist attitude, the scientific attitude of dialectical materialism that unifies theory and practice."
-        },
-        {
-          "id": "rps-016",
-          "text": "We must advocate a Marxist style of study. The essence of Marxism is to start from objective reality, to derive from it its inherent laws, and to take these as our guide to action. Our comrades should learn to use the Marxist stand, viewpoint, and method to study the actual problems of China, to analyze the history of China, and to dissect the various classes of Chinese society. We study not for the sake of study, not for the sake of reading books; we study Marxism in order to apply it, in order to solve the actual problems of the Chinese revolution."
-        },
-        {
-          "id": "rps-017",
-          "text": "We must advocate a Marxist style of study. The essence of Marxism is to start from objective reality, to derive from it its inherent laws, and to take these as our guide to action. Our comrades should learn to use the Marxist stand, viewpoint, and method to study the actual problems of China, to analyze the history of China, and to dissect the various classes of Chinese society. We study not for the sake of study, not for the sake of reading books; we study Marxism in order to apply it, in order to solve the actual problems of the Chinese revolution."
-        },
-        {
-          "id": "rps-018",
-          "text": "We must advocate a Marxist style of study. The essence of Marxism is to start from objective reality, to derive from it its inherent laws, and to take these as our guide to action. Our comrades should learn to use the Marxist stand, viewpoint, and method to study the actual problems of China, to analyze the history of China, and to dissect the various classes of Chinese society. We study not for the sake of study, not for the sake of reading books; we study Marxism in order to apply it, in order to solve the actual problems of the Chinese revolution."
-        },
-        {
-          "id": "rps-019",
-          "text": "Oppose Sectarianism to Rectify the Party's Style of Work"
-        },
-        {
-          "id": "rps-020",
-          "text": "Oppose Sectarianism to Rectify the Party's Style of Work"
-        },
-        {
-          "id": "rps-021",
-          "text": "Oppose Sectarianism to Rectify the Party's Style of Work"
-        },
-        {
-          "id": "rps-022",
-          "text": "Oppose Sectarianism to Rectify the Party's Style of Work"
-        },
-        {
-          "id": "rps-023",
-          "text": "Sectarianism is a manifestation of subjectivism in organizational relations. Its main feature is to assert one's independence, to refuse to cooperate with others, to see only one's own strong points and not those of others. Our Party is a proletarian party, the advanced detachment of the proletariat, and it should lead the proletariat and the broad masses of the people in the revolutionary struggle. But to exercise this leadership, our Party must maintain close ties with all allies outside the Party, with every comrade within the Party, and with our masses."
-        },
-        {
-          "id": "rps-024",
-          "text": "Sectarianism is a manifestation of subjectivism in organizational relations. Its main feature is to assert one's independence, to refuse to cooperate with others, to see only one's own strong points and not those of others. Our Party is a proletarian party, the advanced detachment of the proletariat, and it should lead the proletariat and the broad masses of the people in the revolutionary struggle. But to exercise this leadership, our Party must maintain close ties with all allies outside the Party, with every comrade within the Party, and with our masses."
-        },
-        {
-          "id": "rps-025",
-          "text": "Sectarianism is a manifestation of subjectivism in organizational relations. Its main feature is to assert one's independence, to refuse to cooperate with others, to see only one's own strong points and not those of others. Our Party is a proletarian party, the advanced detachment of the proletariat, and it should lead the proletariat and the broad masses of the people in the revolutionary struggle. But to exercise this leadership, our Party must maintain close ties with all allies outside the Party, with every comrade within the Party, and with our masses."
-        },
-        {
-          "id": "rps-026",
-          "text": "Sectarianism in our Party manifests itself in the fact that some comrades see only the interests of their own part, not the interests of the whole; they see only the interests of their own small group or small circle, not the interests of the Party and the people. They put personal interests first, and the interests of the Party and the people second. This thinking, of personal first and Party-and-people second, is the ideological basis of sectarianism. Sectarianism is a manifestation of impurity in the Party's style of work, and must be opposed resolutely and thoroughly."
-        },
-        {
-          "id": "rps-027",
-          "text": "Sectarianism in our Party manifests itself in the fact that some comrades see only the interests of their own part, not the interests of the whole; they see only the interests of their own small group or small circle, not the interests of the Party and the people. They put personal interests first, and the interests of the Party and the people second. This thinking, of personal first and Party-and-people second, is the ideological basis of sectarianism. Sectarianism is a manifestation of impurity in the Party's style of work, and must be opposed resolutely and thoroughly."
-        },
-        {
-          "id": "rps-028",
-          "text": "Sectarianism in our Party manifests itself in the fact that some comrades see only the interests of their own part, not the interests of the whole; they see only the interests of their own small group or small circle, not the interests of the Party and the people. They put personal interests first, and the interests of the Party and the people second. This thinking, of personal first and Party-and-people second, is the ideological basis of sectarianism. Sectarianism is a manifestation of impurity in the Party's style of work, and must be opposed resolutely and thoroughly."
-        },
-        {
-          "id": "rps-029",
-          "text": "Sectarianism in our Party manifests itself in the fact that some comrades see only the interests of their own part, not the interests of the whole; they see only the interests of their own small group or small circle, not the interests of the Party and the people. They put personal interests first, and the interests of the Party and the people second. This thinking, of personal first and Party-and-people second, is the ideological basis of sectarianism. Sectarianism is a manifestation of impurity in the Party's style of work, and must be opposed resolutely and thoroughly."
-        },
-        {
-          "id": "rps-030",
-          "text": "To oppose sectarianism, we must carry out criticism and self-criticism in the Party. Criticism and self-criticism is one of the three important styles of work of our Party, and one of the salient marks distinguishing our Party from all other parties. Every one of our Party members must have the courage to criticize the mistakes of others, and also the courage to criticize his own shortcomings. Through criticism and self-criticism, we shall achieve the goal of uniting our comrades and making common progress. We must, in the Party, truly and extensively carry out criticism and self-criticism, so that our Party will become a great, glorious and correct party."
-        },
-        {
-          "id": "rps-031",
-          "text": "To oppose sectarianism, we must carry out criticism and self-criticism in the Party. Criticism and self-criticism is one of the three important styles of work of our Party, and one of the salient marks distinguishing our Party from all other parties. Every one of our Party members must have the courage to criticize the mistakes of others, and also the courage to criticize his own shortcomings. Through criticism and self-criticism, we shall achieve the goal of uniting our comrades and making common progress. We must, in the Party, truly and extensively carry out criticism and self-criticism, so that our Party will become a great, glorious and correct party."
-        },
-        {
-          "id": "rps-032",
-          "text": "To oppose sectarianism, we must carry out criticism and self-criticism in the Party. Criticism and self-criticism is one of the three important styles of work of our Party, and one of the salient marks distinguishing our Party from all other parties. Every one of our Party members must have the courage to criticize the mistakes of others, and also the courage to criticize his own shortcomings. Through criticism and self-criticism, we shall achieve the goal of uniting our comrades and making common progress. We must, in the Party, truly and extensively carry out criticism and self-criticism, so that our Party will become a great, glorious and correct party."
-        },
-        {
-          "id": "rps-033",
-          "text": "Oppose Party Stereotypes to Rectify the Style of Writing"
-        },
-        {
-          "id": "rps-034",
-          "text": "Oppose Party Stereotypes to Rectify the Style of Writing"
-        },
-        {
-          "id": "rps-035",
-          "text": "Oppose Party Stereotypes to Rectify the Style of Writing"
-        },
-        {
-          "id": "rps-036",
-          "text": "Oppose Party Stereotypes to Rectify the Style of Writing"
-        },
-        {
-          "id": "rps-037",
-          "text": "Party stereotypes are a form in which subjectivism and sectarianism are expressed. What are Party stereotypes? They are essays full of empty talk and devoid of substance; they are essays that strike a pose to overawe people; they are essays that shoot at random without considering their readers. If our comrades, in writing or in making speeches, pay no attention to their readers and do not solve practical problems, but merely apply things mechanically and pile up obscure terminology, that is Party stereotypes, and it must be resolutely opposed."
-        },
-        {
-          "id": "rps-038",
-          "text": "Party stereotypes are a form in which subjectivism and sectarianism are expressed. What are Party stereotypes? They are essays full of empty talk and devoid of substance; they are essays that strike a pose to overawe people; they are essays that shoot at random without considering their readers. If our comrades, in writing or in making speeches, pay no attention to their readers and do not solve practical problems, but merely apply things mechanically and pile up obscure terminology, that is Party stereotypes, and it must be resolutely opposed."
-        },
-        {
-          "id": "rps-039",
-          "text": "Party stereotypes are a form in which subjectivism and sectarianism are expressed. What are Party stereotypes? They are essays full of empty talk and devoid of substance; they are essays that strike a pose to overawe people; they are essays that shoot at random without considering their readers. If our comrades, in writing or in making speeches, pay no attention to their readers and do not solve practical problems, but merely apply things mechanically and pile up obscure terminology, that is Party stereotypes, and it must be resolutely opposed."
-        },
-        {
-          "id": "rps-040",
-          "text": "In writing and making speeches, we must consider our readers and have an aim in view. We are not writing for a few people to see, nor are we writing things that only a few people can understand. Our essays and our speeches are for the workers, peasants, soldiers, and intellectuals. These people are the people we serve, and they are our readers. Therefore, our essays and our speeches must come from among them and return to them, and must be in a language they can understand and a form they can accept, so as to express our ideas and spread our views."
-        },
-        {
-          "id": "rps-041",
-          "text": "In writing and making speeches, we must consider our readers and have an aim in view. We are not writing for a few people to see, nor are we writing things that only a few people can understand. Our essays and our speeches are for the workers, peasants, soldiers, and intellectuals. These people are the people we serve, and they are our readers. Therefore, our essays and our speeches must come from among them and return to them, and must be in a language they can understand and a form they can accept, so as to express our ideas and spread our views."
-        },
-        {
-          "id": "rps-042",
-          "text": "In writing and making speeches, we must consider our readers and have an aim in view. We are not writing for a few people to see, nor are we writing things that only a few people can understand. Our essays and our speeches are for the workers, peasants, soldiers, and intellectuals. These people are the people we serve, and they are our readers. Therefore, our essays and our speeches must come from among them and return to them, and must be in a language they can understand and a form they can accept, so as to express our ideas and spread our views."
-        },
-        {
-          "id": "rps-043",
-          "text": "In writing and making speeches, we must consider our readers and have an aim in view. We are not writing for a few people to see, nor are we writing things that only a few people can understand. Our essays and our speeches are for the workers, peasants, soldiers, and intellectuals. These people are the people we serve, and they are our readers. Therefore, our essays and our speeches must come from among them and return to them, and must be in a language they can understand and a form they can accept, so as to express our ideas and spread our views."
-        },
-        {
-          "id": "rps-044",
-          "text": "The style of study and the style of writing are both the Party's style of work, and are both questions of the ideological method of Party members. We must, throughout the Party, launch a rectification movement to oppose subjectivism, sectarianism, and Party stereotypes, and establish a Marxist, dialectical-materialist, mass-line, theory-and-practice-united style of study and writing, so that our Party will truly become a great, glorious and correct party, and so that our Party members will truly become Marxists, revolutionaries capable of solving the practical problems of the Chinese revolution."
-        },
-        {
-          "id": "rps-045",
-          "text": "The style of study and the style of writing are both the Party's style of work, and are both questions of the ideological method of Party members. We must, throughout the Party, launch a rectification movement to oppose subjectivism, sectarianism, and Party stereotypes, and establish a Marxist, dialectical-materialist, mass-line, theory-and-practice-united style of study and writing, so that our Party will truly become a great, glorious and correct party, and so that our Party members will truly become Marxists, revolutionaries capable of solving the practical problems of the Chinese revolution."
-        },
-        {
-          "id": "rps-046",
-          "text": "The style of study and the style of writing are both the Party's style of work, and are both questions of the ideological method of Party members. We must, throughout the Party, launch a rectification movement to oppose subjectivism, sectarianism, and Party stereotypes, and establish a Marxist, dialectical-materialist, mass-line, theory-and-practice-united style of study and writing, so that our Party will truly become a great, glorious and correct party, and so that our Party members will truly become Marxists, revolutionaries capable of solving the practical problems of the Chinese revolution."
+          "id": "rectify-party-style-1942-footnote-009",
+          "kind": "note",
+          "text": "〔9〕 抵制日货是中国人民在二十世纪上半叶所常常采取的反抗日本帝国主义侵略的一种斗争方法。例如，在一九一九年五四爱国运动时期，一九三一年九一八事变之后，中国人民都曾经进行过抵制日货的运动。"
         }
       ]
     }

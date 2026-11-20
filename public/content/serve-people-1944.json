@@ -50,40 +50,31 @@
         {
           "id": "sp-006",
           "text": "今后我们的队伍里，不管死了谁，不管是炊事员，是战士，只要他是做过一些有益的工作的，我们都要给他送葬，开追悼会。这要成为一个制度。这个方法也要介绍到老百姓那里去。村上的人死了，开个追悼会。用这样的方法，寄托我们的哀思，使整个人民团结起来。"
-        }
-      ]
-    },
-    "en": {
-      "language": "en",
-      "translator": "Foreign Languages Press (early translation, 1950s)",
-      "source": "Serve the People, Selected Works of Mao Tse-tung, Vol. 3, FLP, 1954",
-      "licenseNote": "Based on the Foreign Languages Press English translation. Rights status has not been cleared for public distribution.",
-      "updatedAt": "2026-07-28",
-      "status": "published",
-      "paragraphs": [
-        {
-          "id": "sp-001",
-          "text": "Our Ranks Are Entirely for the Liberation of the People"
         },
         {
-          "id": "sp-002",
-          "text": "Our Communist Party and the Eighth Route Army and New Fourth Army led by our Party are all revolutionary forces fighting entirely for the liberation of the people, working whole-heartedly in the interests of the people. Comrade Chang Szu-te was a member of our ranks."
+          "id": "serve-people-1944-footnotes-title",
+          "kind": "heading",
+          "text": "注释"
         },
         {
-          "id": "sp-003",
-          "text": "All men must die, but death may vary in its significance. The ancient Chinese writer Ssuma Chien said, \"Though death befalls all men alike, it may be weightier than Mount Tai or lighter than a feather.\" To die for the interests of the people is weightier than Mount Tai, but to work for the fascists and die in the service of the exploiters and oppressors of the people is lighter than a feather. Comrade Chang Szu-te died for the interests of the people, and his death is weightier than Mount Tai."
+          "id": "serve-people-1944-footnote-001",
+          "kind": "note",
+          "text": "〔1〕 张思德，四川仪陇人，中共中央警备团的战士。他在一九三三年参加红军，经历长征，负过伤，是一个忠实为人民服务的共产党员。一九四四年九月五日在陕北安塞县山中烧炭，因炭窑崩塌而牺牲。"
         },
         {
-          "id": "sp-004",
-          "text": "All Members of the Revolutionary Ranks Should Care for One Another, Love One Another, Help One Another"
+          "id": "serve-people-1944-footnote-002",
+          "kind": "note",
+          "text": "〔2〕 司马迁，中国西汉时期著名的文学家和历史学家，著有《史记》一百三十篇。此处引语见《汉书·司马迁传》中的《报任少卿书》，原文是：“人固有一死，死有重于泰山，或轻于鸿毛。”"
         },
         {
-          "id": "sp-005",
-          "text": "Our cadres should care for every comrade, and all the people in the revolutionary ranks should care for one another, love one another, and help one another. Our comrades, when in difficulty, should see the achievements and the bright future ahead, and raise their courage. The Chinese people are suffering, and it is our duty to rescue them, and we must exert ourselves in struggle. Where there is struggle there is sacrifice, and death is a common occurrence. But we, having the interests of the people and the suffering of the great majority in mind, shall die for them, and that is the right kind of death."
+          "id": "serve-people-1944-footnote-003",
+          "kind": "note",
+          "text": "〔3〕 李鼎铭（一八八一——一九四七），陕西米脂人，开明绅士。他在一九四一年十一月陕甘宁边区第二届参议会上提出“精兵简政”的提案，并在这次会议上当选为陕甘宁边区政府副主席。"
         },
         {
-          "id": "sp-006",
-          "text": "We have all come from different parts of the country, and we have rallied together for one common revolutionary goal. We must also travel this road along with the great majority of the people. Today we are already leading a base area with a population of ninety-one million, but this is not enough; it must be much larger if we are to achieve the liberation of the whole nation. Our comrades, when in difficulty, should see the achievements and the bright future ahead, and raise their courage. When the interests of the people are at stake, our comrades should be ready to sacrifice, ready to devote themselves."
+          "id": "serve-people-1944-footnote-004",
+          "kind": "note",
+          "text": "〔4〕 这是指当时陕甘宁边区和华北、华中、华南各抗日根据地所拥有的人口的总数。"
         }
       ]
     }

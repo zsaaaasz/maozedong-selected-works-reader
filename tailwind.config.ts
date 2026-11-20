@@ -16,22 +16,28 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        paper: '#F4F1EA',
-        ink: '#22221F',
-        secondary: '#66655F',
-        moss: '#6F7868',
-        cinnabar: '#A44A42',
-        'dark-paper': '#191918',
-        'dark-ink': '#EFEDE6',
-        'dark-secondary': '#9B9A93',
-        'dark-line': '#2A2A28',
+        paper: '#F5EEE5',
+        ink: '#28211E',
+        secondary: '#796E67',
+        moss: '#40564A',
+        cinnabar: '#BE2D2E',
+        'cinnabar-deep': '#8E2223',
+        'dark-paper': '#0D0A09',
+        'dark-surface': '#1A1412',
+        'dark-surface-2': '#221A16',
+        'dark-ink': '#F2E7D6',
+        'dark-secondary': '#B4A296',
+        'dark-line': '#382B26',
       },
       fontFamily: {
-        // Use native Chinese UI faces; editorial serif is reserved for reading.
-        sans: ['"Avenir Next"', '"PingFang SC"', '"Hiragino Sans GB"', 'system-ui', 'sans-serif'],
-        serif: ['"Source Serif 4"', '"Source Han Serif SC"', 'Georgia', 'serif'],
+        // 内置思源宋体子集（Noto Serif SC 子集，含 wght 200–900 可变轴），
+        // 未命中的字符回退到系统字体。
+        sans: ['"MaoSerif"', '"PingFang SC"', '"Microsoft YaHei"', 'system-ui', 'sans-serif'],
+        serif: ['"MaoSerif"', '"Source Serif 4"', '"Source Han Serif SC"', 'Georgia', 'serif'],
         // Chinese titles use a modern 宋体
         'serif-cn': [
+          '"MaoSerif"',
+          '"Noto Serif CJK SC"',
           '"Source Han Serif SC"',
           '"Noto Serif SC"',
           'Songti SC',
@@ -42,12 +48,28 @@ const config: Config = {
       },
       fontSize: {
         // Body default 17–18px
-        body: ['17px', { lineHeight: '1.8' }],
-        'body-lg': ['18px', { lineHeight: '1.8' }],
+        body: ['17px', { lineHeight: '1.9' }],
+        'body-lg': ['18.5px', { lineHeight: '2.05' }],
+      },
+      opacity: {
+        // 默认刻度之外的项目里用到的值；不补这些，bg-paper/88 之类的类会被静默丢弃
+        8: '0.08',
+        12: '0.12',
+        18: '0.18',
+        22: '0.22',
+        34: '0.34',
+        45: '0.45',
+        55: '0.55',
+        62: '0.62',
+        75: '0.75',
+        85: '0.85',
+        88: '0.88',
+        92: '0.92',
+        94: '0.94',
       },
       borderRadius: {
-        card: '12px',
-        'card-lg': '18px',
+        card: '14px',
+        'card-lg': '20px',
       },
       maxWidth: {
         reader: '680px', // optimal reading width

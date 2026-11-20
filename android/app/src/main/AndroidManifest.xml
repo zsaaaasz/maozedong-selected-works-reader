@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
 
     <application
         android:allowBackup="true"
@@ -29,7 +32,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="com.frankfika.maobible" />
+                <data android:scheme="cn.maoxuan.reader" />
             </intent-filter>
 
         </activity>
@@ -47,7 +50,6 @@
 
     <!-- Permissions -->
 
-    <uses-permission android:name="android.permission.INTERNET" />
     <!-- @capacitor/haptics uses VibrationEffect on Android 12+; the legacy
          Vibrator API on older API levels still requires VIBRATE to be
          declared. We never call it programmatically beyond bookmark /

@@ -1,81 +1,159 @@
+﻿import type { ReactNode } from 'react';
 import type { Paragraph, LangCode } from '@/types';
+import { footnoteNumberFromMarker } from '@/lib/footnotes';
 
-/**
- * Simple paragraph renderer — typography + optional tap handler.
- * Tap → AI 解释 dialog (only for Chinese paragraphs, since the LLM
- * is currently trained on Chinese interpretation).
- *
- * Always renders the same element type for a given `kind`, even when
- * `onTap` is undefined — previously fell back from <button> to <p>, which
- * caused focus loss and re-mounts when the user toggled content language.
- */
+const FOOTNOTE_MARKER_PATTERN = /[①-⑳⑴-⒇⒈-⒛]/gu;
+const INLINE_HEADING_PATTERN = /(^|[。！？；：])([ \t\u3000]*)([一二三四五六七八九十百]{1,3})　{1,2}/gu;
+
 export function ParagraphView({
   p,
   lang,
-  onTap,
+  footnoteNumbers,
+  footnoteReferenceIds,
+  onFootnoteJump,
 }: {
   p: Paragraph;
   lang: LangCode;
-  onTap?: () => void;
+  footnoteNumbers?: Set<number>;
+  footnoteReferenceIds?: Map<string, string>;
+  onFootnoteJump?: (number: number) => void;
 }) {
-  if (p.kind === 'heading') {
+  const kind = p.kind ?? 'body';
+
+  if (kind === 'heading') {
     return (
       <h2
         data-para-id={p.id}
-        className="font-serif-cn font-medium text-ink dark:text-dark-ink
-                   text-lg sm:text-xl mt-8 sm:mt-10 mb-2 sm:mb-3 scroll-mt-20"
+        className="mt-11 mb-5 scroll-mt-24 border-l-[3px] border-cinnabar pl-[0.72em] font-serif-cn text-[1.28rem] font-semibold leading-[1.5] tracking-[0.06em] text-ink dark:text-dark-ink sm:mt-14 sm:text-[1.4rem]"
       >
         {p.text}
       </h2>
     );
   }
 
-  const textClass =
-    lang === 'zh-CN'
-      ? 'para-zh text-[16px] sm:text-[17px] my-3.5 sm:my-5 leading-[1.9] sm:leading-[2]'
-      : 'para-en text-[15px] sm:text-base my-3.5 sm:my-5 leading-[1.75] sm:leading-[1.85]';
+  const textClass = lang === 'zh-CN'
+    ? 'para-zh text-[18px] leading-[2.05] sm:text-[18.5px] sm:leading-[2.1]'
+    : 'para-en text-[15px] leading-[1.8] sm:text-base';
 
-  if (!onTap) {
-    // Plain non-interactive paragraph (English mode, or bilingual
-    // secondary column). Renders as <p> with the same data-para-id
-    // attribute so scroll/highlight logic keeps working.
+  if (kind === 'note') {
     return (
-      <p
-        data-para-id={p.id}
-        className={textClass}
-      >
+      <p data-para-id={p.id} className="my-2 text-[13px] leading-[1.85] text-secondary dark:text-dark-secondary">
         {p.text}
       </p>
     );
   }
 
   return (
-    <button
-      type="button"
+    <p
       data-para-id={p.id}
-      onClick={onTap}
+      data-selectable={kind === 'body' ? 'true' : undefined}
       className={[
         textClass,
-        'group relative block w-full text-left',
-        'rounded-lg border border-dashed border-cinnabar/40 dark:border-cinnabar/35',
-        'px-3 -mx-1 py-1 my-2 sm:my-3',
-        'bg-cinnabar/[0.02] hover:bg-cinnabar/[0.07] active:bg-cinnabar/[0.10]',
-        'transition-colors',
-        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-cinnabar/60',
+        kind === 'body'
+          ? 'reader-selectable my-6 scroll-mt-24 text-justify [text-indent:2em] sm:my-7'
+          : 'my-6 text-justify sm:my-7',
+        kind === 'quote' ? 'border-l-2 border-moss/40 pl-4 text-secondary dark:text-dark-secondary' : '',
       ].join(' ')}
-      aria-label={`解读段落：${p.text.slice(0, 24)}`}
     >
-      {p.text}
-      <span
-        className="absolute -top-2 right-2 inline-flex items-center gap-0.5
-                   px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px]
-                   bg-cinnabar text-paper
-                   opacity-80 group-hover:opacity-100 transition-opacity
-                   pointer-events-none"
-        aria-hidden
-      >
-        💡 AI
-      </span>
-    </button>
+      {kind === 'body'
+        ? renderBodyWithHeadings(p, footnoteNumbers, footnoteReferenceIds, onFootnoteJump)
+        : renderText(p, p.text, 0, footnoteNumbers, footnoteReferenceIds, onFootnoteJump)}
+    </p>
   );
+}
+
+function renderBodyWithHeadings(
+  paragraph: Paragraph,
+  footnoteNumbers?: Set<number>,
+  referenceIds?: Map<string, string>,
+  onFootnoteJump?: (number: number) => void,
+): ReactNode[] | string {
+  const headings = [...paragraph.text.matchAll(INLINE_HEADING_PATTERN)].map((match) => ({
+    start: (match.index ?? 0) + match[1].length + match[2].length,
+  }));
+  if (headings.length === 0) {
+    return renderText(paragraph, paragraph.text, 0, footnoteNumbers, referenceIds, onFootnoteJump);
+  }
+
+  const parts: ReactNode[] = [];
+  let cursor = 0;
+  headings.forEach(({ start }, index) => {
+    if (start > cursor) {
+      parts.push(renderText(
+        paragraph,
+        paragraph.text.slice(cursor, start),
+        cursor,
+        footnoteNumbers,
+        referenceIds,
+        onFootnoteJump,
+      ));
+    }
+
+    const end = headings[index + 1]?.start ?? paragraph.text.length;
+    parts.push(
+      <span key={paragraph.id + '-section-' + start} className="reader-inline-heading">
+        {renderText(
+          paragraph,
+          paragraph.text.slice(start, end),
+          start,
+          footnoteNumbers,
+          referenceIds,
+          onFootnoteJump,
+        )}
+      </span>,
+    );
+    cursor = end;
+  });
+
+  if (cursor < paragraph.text.length) {
+    parts.push(renderText(
+      paragraph,
+      paragraph.text.slice(cursor),
+      cursor,
+      footnoteNumbers,
+      referenceIds,
+      onFootnoteJump,
+    ));
+  }
+  return parts;
+}
+
+function renderText(
+  paragraph: Paragraph,
+  text: string,
+  baseOffset: number,
+  footnoteNumbers?: Set<number>,
+  referenceIds?: Map<string, string>,
+  onFootnoteJump?: (number: number) => void,
+): ReactNode[] | string {
+  if ((paragraph.kind ?? 'body') !== 'body' || !footnoteNumbers?.size) return text;
+
+  const parts: ReactNode[] = [];
+  let cursor = 0;
+  for (const match of text.matchAll(FOOTNOTE_MARKER_PATTERN)) {
+    if (match.index === undefined) continue;
+    const number = footnoteNumberFromMarker(match[0]);
+    if (number === null || !footnoteNumbers.has(number)) continue;
+    if (match.index > cursor) parts.push(text.slice(cursor, match.index));
+    const anchorId = referenceIds?.get(paragraph.id + ':' + (baseOffset + match.index));
+    parts.push(
+      <a
+        key={paragraph.id + '-footnote-' + (baseOffset + match.index)}
+        id={anchorId}
+        href={'#footnote-' + number}
+        className="footnote-ref"
+        aria-label={'转到注释' + number}
+        onClick={(event) => {
+          event.preventDefault();
+          onFootnoteJump?.(number);
+        }}
+      >
+        {number}
+      </a>,
+    );
+    cursor = match.index + match[0].length;
+  }
+  if (cursor === 0) return text;
+  if (cursor < text.length) parts.push(text.slice(cursor));
+  return parts;
 }

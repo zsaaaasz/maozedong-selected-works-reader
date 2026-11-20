@@ -41,7 +41,7 @@ export function TocDrawer({
       if (cur.items.length > 0 || cur.heading) sections.push(cur);
       cur = { heading: p.text, items: [] };
     } else {
-      cur.items.push({ id: p.id, text: p.text.slice(0, 60), kind: p.kind });
+      cur.items.push({ id: p.id, text: p.text.slice(0, 60), kind: p.kind ?? 'body' });
     }
   }
   if (cur.items.length > 0 || cur.heading) sections.push(cur);

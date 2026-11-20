@@ -403,7 +403,7 @@ function ParagraphCard({
     <button
       onClick={onClick}
       className="w-full text-left rounded-card-lg border border-ink/8 dark:border-dark-line
-                 bg-white/60 dark:bg-dark-ink/5 p-3.5 sm:p-4
+                 bg-white/60 dark:bg-dark-surface p-3.5 sm:p-4
                  hover:border-cinnabar/40 active:scale-[0.99] transition-all group"
     >
       <p className="text-[11px] sm:text-[12px] text-cinnabar/85 dark:text-cinnabar/80 leading-relaxed mb-2">
@@ -443,7 +443,7 @@ function RespondExamples({ onPick }: { onPick: (q: string) => void }) {
             onClick={() => onPick(e)}
             className="block w-full text-left min-h-[40px] px-3 py-2 text-[13px] sm:text-sm rounded-card
                        border border-ink/10 dark:border-dark-line
-                       bg-white/50 dark:bg-dark-ink/5
+                       bg-white/50 dark:bg-dark-surface
                        hover:border-cinnabar/40 hover:text-cinnabar
                        active:scale-[0.99] transition-all duration-180"
           >
@@ -476,7 +476,7 @@ function AskPresets({ onPick }: { onPick: (q: string) => void }) {
             onClick={() => onPick(q)}
             className="min-h-[36px] px-3 py-1.5 text-sm rounded-full
                        border border-ink/10 dark:border-dark-line
-                       bg-white/50 dark:bg-dark-ink/5
+                       bg-white/50 dark:bg-dark-surface
                        hover:border-cinnabar/40 hover:text-cinnabar
                        active:scale-95 transition-all duration-180"
           >
@@ -510,7 +510,7 @@ function RecentChats({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               className="rounded-card border border-ink/8 dark:border-dark-line
-                         bg-white/50 dark:bg-dark-ink/5 p-3"
+                         bg-white/50 dark:bg-dark-surface p-3"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">

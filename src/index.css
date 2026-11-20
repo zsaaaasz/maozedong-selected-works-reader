@@ -1,11 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* -------------------------------------------------------------------------
- * Design tokens — sourced from docs/product-plan.md §6
+ * 内置思源宋体子集：只含本应用内容出现过的字符，约 1.1 MB
+ * 可变字重 200–900，标题用 600 / 正文用 400
+ * ------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'MaoSerif';
+  src: url('/fonts/maoserif-subset.woff2') format('woff2-variations');
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* -------------------------------------------------------------------------
+ * Design tokens — tuned for quiet, offline book reading.
  * Light mode default; .dark class flips to dark palette
  * ------------------------------------------------------------------------- */
 @layer base {
@@ -25,23 +35,25 @@
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background: #F4F1EA;
+    background: #F5EEE5;
     overscroll-behavior: none;
   }
 
   body {
-    @apply bg-paper text-ink font-sans;
+    @apply bg-paper text-ink;
+    font-family: theme('fontFamily.serif-cn');
     min-width: 320px;
     min-height: 100dvh;
     margin: 0;
     font-size: 16px;
-    line-height: 1.65;
+    line-height: 1.75;
     -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
   }
   @media (min-width: 640px) {
     body {
       font-size: 17px;
-      line-height: 1.75;
+      line-height: 1.85;
     }
   }
 
@@ -50,7 +62,7 @@
   html.dark body,
   html.dark {
     @apply bg-dark-paper text-dark-ink;
-    background: #191918;
+    background: #0D0A09;
   }
 
   button,
@@ -67,7 +79,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid #A44A42;
+    outline: 2px solid #BE2D2E;
     outline-offset: 3px;
   }
 
@@ -87,14 +99,16 @@
 @layer components {
   /* Card surface — soft border, no heavy shadow */
   .card {
-    @apply rounded-card border border-ink/10 dark:border-dark-line bg-white/40 dark:bg-dark-ink/5
+    @apply rounded-card border border-ink/10 dark:border-dark-line bg-white/40 dark:bg-dark-surface
            transition-colors duration-220;
   }
 
   .app-surface {
-    background-image:
-      radial-gradient(circle at 12% -10%, rgb(164 74 66 / 0.065), transparent 28rem),
-      radial-gradient(circle at 92% 18%, rgb(111 120 104 / 0.06), transparent 24rem);
+    background-color: theme('colors.paper');
+  }
+
+  html.dark .app-surface {
+    background-color: theme('colors.dark-paper');
   }
 
   /* Reader body — Chinese-first reading width */
@@ -104,14 +118,118 @@
 
   .prose-reader p {
     @apply text-body-lg my-6;
+     text-align: justify;
+    text-justify: inter-ideograph;
+    letter-spacing: 0.012em;
   }
 
-  .prose-reader .para-zh {
+  /* 中文段落首行缩进两字，与纸书排印一致 */
+  .prose-reader p.para-zh,
+  .prose-reader p[data-kind='body'],
+  .prose-reader .para-indent {
+    text-indent: 2em;
+  }
+
+  .prose-reader p.para-zh {
     @apply font-serif-cn;
   }
 
   .prose-reader .para-en {
     @apply font-serif italic text-ink/90 dark:text-dark-ink/90;
+  }
+
+  .reader-selectable {
+    -webkit-user-select: text;
+    user-select: text;
+    touch-action: auto;
+  }
+
+  .reader-selectable::selection {
+    color: #28211E;
+    background: rgb(197 61 55 / 0.32);
+  }
+
+  .footnote-ref {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.32em;
+    height: 1.32em;
+    padding: 0;
+    margin-inline: 0.12em;
+    border-radius: 50%;
+    background: theme('colors.cinnabar');
+    color: #FFF6EE;
+    text-decoration: none;
+    font-family: theme('fontFamily.serif-cn');
+    font-size: 0.68em;
+    font-weight: 600;
+    line-height: 1;
+    text-indent: 0;
+    letter-spacing: 0;
+    vertical-align: 0.38em;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .footnote-ref:hover {
+    background: theme('colors.cinnabar-deep');
+  }
+
+  .footnote-ref:focus-visible,
+  .footnote-backlink:focus-visible {
+    outline-offset: 2px;
+  }
+
+  .reader-note-highlight {
+    background: rgb(190 45 46 / 0.16);
+    border-radius: 3px;
+    transition: background-color 1.2s ease-out;
+  }
+
+  ::highlight(reader-note) {
+    background: rgb(190 45 46 / 0.34);
+    color: inherit;
+  }
+
+  .reader-inline-heading {
+    display: block;
+    margin: 2.6rem 0 1.15rem;
+    padding: 0.12em 0 0.12em 0.72em;
+    border-left: 3px solid theme('colors.cinnabar');
+    border-radius: 2px;
+    color: theme('colors.ink');
+    font-family: theme('fontFamily.serif-cn');
+    font-size: 1.28em;
+    font-weight: 600;
+    line-height: 1.5;
+    letter-spacing: 0.06em;
+    text-indent: 0;
+  }
+
+  html.dark .reader-inline-heading {
+    color: theme('colors.dark-ink');
+  }
+
+  /* 朱红手写横笔：标题下的不规则收笔，用 SVG 叠在标题底部 */
+  .brush-underline {
+    height: 8px;
+    width: 132px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 148 10'><path d='M2 5.6C18 3.1 38 2.7 57 4.1 72 5.2 86 5.8 101 4.4 116 3 132 2.5 146 3.6' stroke='%23BE2D2E' stroke-width='2.6' stroke-linecap='round' fill='none'/><path d='M34 7.4c16 1.2 31 .9 46-.7' stroke='%23BE2D2E' stroke-width='1.3' stroke-linecap='round' fill='none' opacity='.75'/><path d='M100 7.9c11 .6 22 .2 33-.9' stroke='%23BE2D2E' stroke-width='1' stroke-linecap='round' fill='none' opacity='.55'/></svg>");
+    background-repeat: no-repeat;
+    background-position: left center;
+    background-size: contain;
+  }
+
+  .hairline {
+    height: 1px;
+    background: rgb(56 43 38 / 0.55);
+  }
+
+  /* 版面边缘的隐约山峦：纯矢量，任意分辨率清晰 */
+  .ridge-fade {
+    mask-image: linear-gradient(to top, rgb(0 0 0 / 1), rgb(0 0 0 / 0));
+    -webkit-mask-image: linear-gradient(to top, rgb(0 0 0 / 1), rgb(0 0 0 / 0));
   }
 
   /* Subtle link */

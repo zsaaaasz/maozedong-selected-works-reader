@@ -2,29 +2,28 @@ import { useEffect } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { Header } from './Header';
 
-type IconName = 'shelf' | 'ask' | 'shake' | 'person';
+type IconName = 'shelf' | 'ask' | 'shake' | 'notes' | 'person';
 
 const TABS: { to: string; label: string; icon: IconName; end?: boolean }[] = [
   { to: '/', label: '书架', icon: 'shelf', end: true },
-  { to: '/ask', label: '回应', icon: 'ask' },
-  { to: '/shake', label: '摇一摇', icon: 'shake' },
-  { to: '/me', label: '我', icon: 'person' },
+  { to: '/notes', label: '笔记', icon: 'notes' },
+  { to: '/me', label: '我的', icon: 'person' },
 ];
 
 export function AppShell() {
   const { pathname } = useLocation();
   const isReader = pathname.startsWith('/read/');
+  const isShelf = pathname === '/';
 
   useEffect(() => {
     if (isReader) return;
     const pageNames: Record<string, string> = {
       '/': '书架',
-      '/ask': '回应',
-      '/shake': '摇一摇',
+      '/notes': '我的笔记',
       '/me': '我的',
       '/privacy': '隐私政策',
     };
-    document.title = `${pageNames[pathname] ?? '书架'} · 毛选`;
+    document.title = `${pageNames[pathname] ?? '书架'} · 毛泽东选集`;
   }, [isReader, pathname]);
 
   if (isReader) {
@@ -45,11 +44,10 @@ export function AppShell() {
       >
         跳到主要内容
       </a>
-      <Header />
+      {!isShelf && <Header />}
       <main
         id="main-content"
-        className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain
-                   pb-[calc(4.75rem+env(safe-area-inset-bottom))]"
+        className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain pb-4"
       >
         <Outlet />
       </main>
@@ -62,11 +60,11 @@ function BottomNav() {
   return (
     <nav
       aria-label="主要导航"
-      className="fixed bottom-0 left-0 right-0 z-30 backdrop-blur-xl bg-paper/94 dark:bg-dark-paper/94
-                 border-t border-ink/8 dark:border-dark-line shadow-[0_-12px_32px_rgba(34,34,31,0.04)]
+      className="relative z-30 shrink-0 backdrop-blur-xl bg-paper/84 dark:bg-dark-paper/78
+                 border-t border-ink/8 dark:border-dark-line shadow-[0_-8px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_-8px_24px_rgba(0,0,0,0.24)]
                  pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="max-w-3xl mx-auto h-[3.75rem] grid grid-cols-4 px-1">
+      <div className="max-w-3xl mx-auto h-[3.75rem] grid grid-cols-3 px-1">
         {TABS.map((tab) => (
           <NavLink
             key={tab.to}
@@ -74,26 +72,19 @@ function BottomNav() {
             end={tab.end}
             className={({ isActive }) =>
               [
-                'relative flex flex-col items-center justify-center gap-1 rounded-card',
+                'relative flex flex-col items-center justify-center gap-1.5 rounded-card',
                 'transition-colors duration-180 min-h-[48px] touch-manipulation',
                 isActive
                   ? 'text-cinnabar'
-                  : 'text-ink/55 dark:text-dark-ink/55 hover:text-ink dark:hover:text-dark-ink',
+                  : 'text-ink/50 dark:text-dark-ink/45 hover:text-ink dark:hover:text-dark-ink',
               ].join(' ')
             }
           >
             {({ isActive }) => (
               <>
-                <span
-                  className={[
-                    'absolute top-0 h-0.5 w-7 rounded-full bg-cinnabar transition-all duration-220',
-                    isActive ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-50',
-                  ].join(' ')}
-                  aria-hidden
-                />
-                <NavIcon name={tab.icon} />
-                <span className="text-[10px] font-medium leading-none">
-              {tab.label}
+                <NavIcon name={tab.icon} active={isActive} />
+                <span className="font-serif-cn text-[14px] font-medium leading-none tracking-[0.08em]">
+                  {tab.label}
                 </span>
               </>
             )}
@@ -104,14 +95,14 @@ function BottomNav() {
   );
 }
 
-function NavIcon({ name }: { name: IconName }) {
+function NavIcon({ name, active }: { name: IconName; active?: boolean }) {
   const common = {
-    width: 21,
-    height: 21,
+    width: 24,
+    height: 24,
     viewBox: '0 0 24 24',
     fill: 'none',
     stroke: 'currentColor',
-    strokeWidth: 1.8,
+    strokeWidth: active ? 1.7 : 1.4,
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
     'aria-hidden': true,
@@ -133,6 +124,14 @@ function NavIcon({ name }: { name: IconName }) {
         <path d="M9 9.5c0-.7.5-1.2 1.2-1.2" />
         <path d="M12 9.5c0-.7.5-1.2 1.2-1.2" />
         <path d="M9.5 12.4c.5.4 1.4.7 2.3.7s1.8-.3 2.3-.7" />
+      </svg>
+    );
+  }
+  if (name === 'notes') {
+    return (
+      <svg {...common}>
+        <path d="M7 3.75h7.25L19 8.5v11.75A1.75 1.75 0 0 1 17.25 22H7A2.5 2.5 0 0 1 4.5 19.5v-13A2.75 2.75 0 0 1 7.25 3.75Z" />
+        <path d="M14 4v5h5M8 12h7M8 15.5h7M8 19h4" />
       </svg>
     );
   }

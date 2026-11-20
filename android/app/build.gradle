@@ -15,14 +15,14 @@ def releaseStorePassword = signingValue('storePassword', 'MAOBIBLE_UPLOAD_STORE_
 def releaseKeyAlias = signingValue('keyAlias', 'MAOBIBLE_UPLOAD_KEY_ALIAS')
 def releaseKeyPassword = signingValue('keyPassword', 'MAOBIBLE_UPLOAD_KEY_PASSWORD')
 def hasReleaseSigning = [releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword].every { it }
-def releaseVersionCode = (signingProperties.getProperty('versionCode') ?: System.getenv('MAOBIBLE_VERSION_CODE') ?: '1').toInteger()
-def releaseVersionName = signingProperties.getProperty('versionName') ?: System.getenv('MAOBIBLE_VERSION_NAME') ?: '1.0.0'
+def releaseVersionCode = (signingProperties.getProperty('versionCode') ?: System.getenv('MAOBIBLE_VERSION_CODE') ?: '15').toInteger()
+def releaseVersionName = signingProperties.getProperty('versionName') ?: System.getenv('MAOBIBLE_VERSION_NAME') ?: '1.1.13'
 
 android {
-    namespace = "com.frankfika.maobible"
+    namespace = "cn.maoxuan.reader"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.frankfika.maobible"
+        applicationId "cn.maoxuan.reader"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode releaseVersionCode

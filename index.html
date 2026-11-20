@@ -5,16 +5,44 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#F4F1EA" />
+    <meta name="theme-color" content="#080504" />
+    <link rel="preload" as="image" href="/assets/launch-screen.webp" fetchpriority="high" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="毛选" />
+    <meta name="apple-mobile-web-app-title" content="毛泽东选集" />
     <meta name="format-detection" content="telephone=no" />
-    <meta name="description" content="安静、可信的《毛泽东选集》多语言阅读与思想研习空间。" />
-    <title>毛选 · 多语言阅读器</title>
+    <meta name="description" content="离线阅读《毛泽东选集》，保存阅读进度、书签和文字笔记。" />
+    <title>毛泽东选集</title>
+    <style>
+      #boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        overflow: hidden;
+        background: #080504;
+        opacity: 1;
+        transition: opacity 220ms ease-out;
+      }
+      #boot-splash img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      #boot-splash.is-hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #boot-splash { transition: none; }
+      }
+    </style>
   </head>
   <body>
+    <div id="boot-splash" aria-hidden="true">
+      <img src="/assets/launch-screen.webp" alt="" />
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

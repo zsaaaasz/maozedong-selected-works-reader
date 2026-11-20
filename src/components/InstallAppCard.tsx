@@ -81,7 +81,7 @@ export function InstallAppCard() {
   return (
     <div
       className="rounded-card-lg border border-ink/8 dark:border-dark-line
-                 bg-white/60 dark:bg-dark-ink/5 p-4"
+                 bg-white/60 dark:bg-dark-surface p-4"
     >
       <div className="flex items-start gap-3">
         <div

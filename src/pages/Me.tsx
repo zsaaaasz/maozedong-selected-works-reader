@@ -1,59 +1,34 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { ARTICLES } from '@/data/manifest';
 import {
   getAllBookmarks,
   clearBookmark,
   getAllReadingProgress,
   getDailyStats,
-  getAllChats,
-  deleteChat,
+  getAllNotes,
 } from '@/lib/storage';
-import type { Bookmark, ReadingProgress, DailyStats, ChatThread } from '@/types';
-import { useContentLang } from '@/hooks/useContentLang';
-import { ContentLangToggle } from '@/components/ContentLangToggle';
-import { InstallAppCard } from '@/components/InstallAppCard';
-import { AIConfigCard } from '@/components/AIConfigCard';
-
-const UI_LANG_KEY = 'maobible.ui-lang';
-type UILang = 'zh-CN' | 'en';
+import type { Bookmark, ReadingProgress, DailyStats, ReadingNote } from '@/types';
 
 /**
  * Me — 我. Reading stats + history + bookmarks + settings.
  */
 export function Me() {
-  const { i18n } = useTranslation();
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [progress, setProgress] = useState<ReadingProgress[]>([]);
   const [dailyStats, setDailyStats] = useState<DailyStats[]>([]);
-  const [chats, setChats] = useState<ChatThread[]>([]);
-  const [contentLang] = useContentLang();
-  const [uiLang, setUiLang] = useState<UILang>(() => {
-    if (typeof window === 'undefined') return 'zh-CN';
-    const stored = window.localStorage.getItem(UI_LANG_KEY);
-    if (stored === 'en' || stored === 'zh-CN') return stored;
-    return navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en';
-  });
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(UI_LANG_KEY, uiLang);
-    }
-    void i18n.changeLanguage(uiLang);
-  }, [uiLang, i18n]);
-
+  const [notes, setNotes] = useState<ReadingNote[]>([]);
   useEffect(() => {
     void Promise.all([
       getAllBookmarks(),
       getAllReadingProgress(),
       getDailyStats(7),
-      getAllChats(),
-    ]).then(([b, p, d, c]) => {
+      getAllNotes(),
+    ]).then(([b, p, d, n]) => {
       setBookmarks(b);
       setProgress(p);
       setDailyStats(d);
-      setChats(c);
+      setNotes(n);
     });
   }, []);
 
@@ -86,39 +61,30 @@ export function Me() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-8 py-4 sm:py-6 space-y-6 sm:space-y-8">
       <header>
-        <h1 className="font-serif-cn text-2xl sm:text-3xl font-medium text-ink dark:text-dark-ink">
+        <h1 className="font-serif-cn text-[1.85rem] font-semibold tracking-[0.08em] text-ink dark:text-dark-ink sm:text-[2.15rem]">
           我的
         </h1>
       </header>
 
-      <section>
-        <h2 className="text-[11px] sm:text-xs font-medium text-secondary dark:text-dark-secondary mb-2.5 tracking-wider">
-          手机应用
-        </h2>
-        <InstallAppCard />
-      </section>
-
       {/* 本周阅读 */}
       <section>
-        <h2 className="text-[11px] sm:text-xs font-medium text-secondary dark:text-dark-secondary mb-2.5 tracking-wider">
-          本周阅读
-        </h2>
+        <SectionTitle>本周阅读</SectionTitle>
         <div className="rounded-card-lg border border-ink/8 dark:border-dark-line
-                        bg-white/60 dark:bg-dark-ink/5 p-4 sm:p-5">
+                        bg-white/60 dark:bg-dark-surface p-3 sm:p-5">
           <div className="flex items-baseline gap-4">
             <div>
-              <p className="text-2xl sm:text-3xl font-serif-cn text-ink dark:text-dark-ink tabular-nums">
+              <p className="text-[2rem] leading-none sm:text-[2.15rem] font-serif-cn text-ink dark:text-dark-ink tabular-nums">
                 {weekMin}
               </p>
-              <p className="text-[10px] sm:text-xs text-secondary dark:text-dark-secondary">
+              <p className="text-[15px] leading-tight text-secondary dark:text-dark-secondary">
                 分钟
               </p>
             </div>
             <div>
-              <p className="text-2xl sm:text-3xl font-serif-cn text-ink dark:text-dark-ink tabular-nums">
+              <p className="text-[2rem] leading-none sm:text-[2.15rem] font-serif-cn text-ink dark:text-dark-ink tabular-nums">
                 {weekArticles}
               </p>
-              <p className="text-[10px] sm:text-xs text-secondary dark:text-dark-secondary">
+              <p className="text-[15px] leading-tight text-secondary dark:text-dark-secondary">
                 篇
               </p>
             </div>
@@ -129,11 +95,12 @@ export function Me() {
 
       {/* 累计 */}
       <section>
-        <h2 className="text-[11px] sm:text-xs font-medium text-secondary dark:text-dark-secondary mb-2.5 tracking-wider">
-          累计
-        </h2>
-        <p className="text-sm text-ink dark:text-dark-ink">
-          {ARTICLES.length} 篇中已读 {totalRead} 篇 · 收藏 {bookmarks.length} 篇 · 累计 {totalMinRead} 分钟
+        <SectionTitle>累计</SectionTitle>
+        <p className="text-[16px] leading-[1.8] text-ink dark:text-dark-ink">
+          {ARTICLES.length} 篇中已读 {totalRead} 篇，累计 {totalMinRead} 分钟
+        </p>
+        <p className="text-[15px] leading-[1.8] text-secondary dark:text-dark-secondary">
+          收藏 {bookmarks.length} 篇 · 笔记 {notes.length} 条
         </p>
         <div className="mt-2 h-1.5 bg-ink/5 dark:bg-dark-ink/20 rounded-full overflow-hidden">
           <div
@@ -146,9 +113,7 @@ export function Me() {
       {/* 最近阅读 */}
       {recentProgress.length > 0 && (
         <section>
-          <h2 className="text-[11px] sm:text-xs font-medium text-secondary dark:text-dark-secondary mb-2.5 tracking-wider">
-            最近阅读
-          </h2>
+          <SectionTitle>最近阅读</SectionTitle>
           <ul className="space-y-1.5">
             {recentProgress.map((p) => {
               const a = ARTICLES.find((x) => x.id === p.articleId);
@@ -158,14 +123,14 @@ export function Me() {
                   <Link
                     to={`/read/${p.articleId}`}
                     className="flex items-center justify-between rounded-card border border-ink/8
-                               bg-white/50 dark:bg-dark-ink/5 px-3 py-2.5 min-h-[44px]
-                               hover:border-cinnabar/40 active:scale-[0.99] transition-all"
+                         bg-white/50 dark:border-dark-line dark:bg-dark-surface px-3 py-2.5 min-h-[44px]
+                         hover:border-cinnabar/40 active:scale-[0.99] transition-all"
                   >
                     <span className="flex-1 min-w-0">
-                      <span className="font-serif-cn text-[13px] sm:text-sm text-ink dark:text-dark-ink truncate block">
+                      <span className="font-serif-cn text-[18px] sm:text-[19px] text-ink dark:text-dark-ink truncate block">
                         {a.title}
                       </span>
-                      <span className="text-[10px] text-secondary dark:text-dark-secondary">
+                      <span className="text-[14px] text-secondary dark:text-dark-secondary">
                         {Math.round(p.scrollFraction * 100)}% · {timeAgo(p.updatedAt)}
                       </span>
                     </span>
@@ -185,11 +150,9 @@ export function Me() {
 
       {/* 收藏 */}
       <section>
-        <h2 className="text-[11px] sm:text-xs font-medium text-secondary dark:text-dark-secondary mb-2.5 tracking-wider">
-          收藏 ({bookmarks.length})
-        </h2>
+        <SectionTitle>收藏 ({bookmarks.length})</SectionTitle>
         {bookmarks.length === 0 ? (
-          <p className="text-sm text-secondary dark:text-dark-secondary py-2">
+          <p className="text-[16px] leading-[1.8] text-secondary dark:text-dark-secondary py-2">
             还没有收藏。在文章页点 ★ 收藏当前阅读位置。
           </p>
         ) : (
@@ -201,17 +164,17 @@ export function Me() {
                 <li
                   key={b.articleId}
                   className="flex items-center justify-between rounded-card border border-ink/8
-                             bg-white/50 dark:bg-dark-ink/5 px-3 py-2.5 min-h-[44px]"
+                             bg-white/50 dark:border-dark-line dark:bg-dark-surface px-3 py-2.5 min-h-[44px]"
                 >
                   <Link
                     to={`/read/${b.articleId}`}
-                    className="flex-1 min-w-0 font-serif-cn text-[13px] sm:text-sm text-ink dark:text-dark-ink hover:text-cinnabar transition-colors truncate"
+                    className="flex-1 min-w-0 font-serif-cn text-[18px] sm:text-[19px] text-ink dark:text-dark-ink hover:text-cinnabar transition-colors truncate"
                   >
                     {article.title}
                   </Link>
                   <button
                     onClick={() => void onRemove(b.articleId)}
-                    className="text-sm text-secondary hover:text-cinnabar transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                    className="text-base text-secondary hover:text-cinnabar transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                     aria-label="移除收藏"
                   >
                     ✕
@@ -223,131 +186,73 @@ export function Me() {
         )}
       </section>
 
-      {/* 对话历史 — Ask 页之外的入口, 满足隐私页"应用内删除对话"承诺 */}
-      {chats.length > 0 && (
-        <section>
-          <h2 className="text-[11px] sm:text-xs font-medium text-secondary dark:text-dark-secondary mb-2.5 tracking-wider">
-            最近对话 ({chats.length})
-          </h2>
+      {/* 我的笔记 */}
+      <section>
+        <SectionTitle>我的笔记 ({notes.length})</SectionTitle>
+        {notes.length === 0 ? (
+          <p className="text-[16px] leading-[1.8] text-secondary dark:text-dark-secondary py-2">
+            阅读正文时长按选择文字，再点“记笔记”。
+          </p>
+        ) : (
           <ul className="space-y-1.5">
-            {chats.slice(0, 10).map((t) => {
-              const lastAi = [...t.messages].reverse().find((m) => m.role === 'ai');
+            {notes.slice(0, 30).map((note) => {
+              const article = ARTICLES.find((a) => a.id === note.articleId);
+              if (!article) return null;
               return (
-                <li
-                  key={t.id}
-                  className="flex items-start justify-between gap-2 rounded-card border border-ink/8
-                             bg-white/50 dark:bg-dark-ink/5 px-3 py-2.5 min-h-[44px]"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-sans text-[13px] sm:text-sm text-ink dark:text-dark-ink truncate">
-                      {t.title || '对话'}
-                    </p>
-                    {lastAi && (
-                      <p className="mt-0.5 text-[11px] text-secondary dark:text-dark-secondary line-clamp-1">
-                        {lastAi.text.slice(0, 80)}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    onClick={async () => {
-                      await deleteChat(t.id);
-                      setChats((prev) => prev.filter((c) => c.id !== t.id));
+                <li key={note.id}>
+                  <Link
+                    to={`/read/${note.articleId}#${note.paragraphId}`}
+                    state={{
+                      from: '/me',
+                      openNotes: true,
+                      noteId: note.id,
+                      quote: note.quote,
+                      startOffset: note.startOffset,
                     }}
-                    className="text-sm text-secondary hover:text-cinnabar transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
-                    aria-label="删除对话"
+                    className="block rounded-card border border-ink/8 dark:border-dark-line
+                               bg-white/50 dark:bg-dark-surface px-3 py-2.5
+                               hover:border-cinnabar/40 transition-colors"
                   >
-                    ✕
-                  </button>
+                    <span className="block text-[14px] text-cinnabar/85">{article.title}</span>
+                    <span className="mt-1 block text-[16px] leading-[1.75] text-ink dark:text-dark-ink line-clamp-2 whitespace-pre-wrap">
+                      {note.content}
+                    </span>
+                    <span className="mt-1 block text-[13.5px] text-secondary dark:text-dark-secondary">
+                      {new Date(note.updatedAt).toLocaleString('zh-CN')}
+                    </span>
+                  </Link>
                 </li>
               );
             })}
           </ul>
-          <Link
-            to="/ask"
-            className="mt-2 inline-flex min-h-[44px] items-center text-xs text-cinnabar/85 hover:text-cinnabar transition-colors"
-          >
-            打开对话页 →
-          </Link>
-        </section>
-      )}
-
-      {/* AI 接入 (BYOK) — 单独一节, 跟"设置"分开. 用户最容易找的位置. */}
-      <section>
-        <h2 className="text-[11px] sm:text-xs font-medium text-secondary dark:text-dark-secondary mb-2.5 tracking-wider">
-          AI 接入 (BYOK)
-        </h2>
-        <div className="rounded-card-lg border border-ink/8 dark:border-dark-line
-                        bg-white/60 dark:bg-dark-ink/5 p-4">
-          <AIConfigCard />
-        </div>
-        <p className="mt-2 text-[10px] sm:text-xs text-secondary dark:text-dark-secondary leading-relaxed">
-          智能回应（AI 解读 / 处境回应 / 问）是可选项。
-          应用不会上传你的内容到任何我们运营的服务器；所有调用都直接发到你在上面选择的 provider。
-          想清除本地记录, 可以删除浏览器存储或卸载应用。
-        </p>
+        )}
+        {notes.length > 30 && (
+          <p className="mt-2 text-[14px] text-secondary dark:text-dark-secondary">显示最近 30 条</p>
+        )}
       </section>
 
-      {/* 设置 */}
+      {/* 本机数据说明 */}
       <section>
-        <h2 className="text-[11px] sm:text-xs font-medium text-secondary dark:text-dark-secondary mb-2.5 tracking-wider">
-          设置
-        </h2>
-        <div className="rounded-card-lg border border-ink/8 dark:border-dark-line
-                        bg-white/60 dark:bg-dark-ink/5 p-4 space-y-4">
-          <div>
-            <p className="text-[11px] text-secondary dark:text-dark-secondary mb-1.5">
-              界面语言
-            </p>
-            <div className="inline-flex rounded-card border border-ink/10 dark:border-dark-line overflow-hidden">
-              {([
-                { code: 'zh-CN' as const, label: '中文' },
-                { code: 'en' as const, label: 'English' },
-              ]).map((l) => {
-                const active = uiLang === l.code;
-                return (
-                  <button
-                    key={l.code}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => setUiLang(l.code)}
-                    className={[
-                      'min-h-[36px] px-3 py-1.5 text-sm transition-colors duration-180',
-                      active
-                        ? 'bg-ink text-paper dark:bg-dark-ink dark:text-dark-paper'
-                        : 'bg-white/40 dark:bg-dark-ink/5 hover:bg-ink/5 dark:hover:bg-dark-ink/10',
-                    ].join(' ')}
-                  >
-                    {l.label}
-                  </button>
-                );
-              })}
-            </div>
-            <p className="mt-1.5 text-[10px] text-secondary dark:text-dark-secondary">
-              独立于内容语言 — 见下方"内容语言"。
-            </p>
-          </div>
-          <div>
-            <p className="text-[11px] text-secondary dark:text-dark-secondary mb-1.5">
-              内容语言
-            </p>
-            <ContentLangToggle />
-            <p className="mt-1.5 text-[10px] text-secondary dark:text-dark-secondary">
-              当前阅读：{contentLang === 'zh-CN' ? '中文原文' : 'English translation'}
-            </p>
-          </div>
-        </div>
-        <p className="mt-4 text-[10px] sm:text-xs text-secondary dark:text-dark-secondary leading-relaxed">
-          毛选多语种阅读器。版本来源：人民出版社 1991 年版《毛泽东选集》。
-          英文为 LLM 翻译草稿（外文出版社版本至 2049 年仍有版权，不在 App 内分发）。
+        <p className="text-[15px] leading-[1.8] text-secondary dark:text-dark-secondary">
+          阅读进度、书签和笔记保存在这台设备。
         </p>
         <Link
           to="/privacy"
-          className="mt-2 inline-flex min-h-[44px] items-center text-xs text-cinnabar/85 transition-colors hover:text-cinnabar"
+          className="mt-2 inline-flex min-h-[44px] items-center text-[16px] text-cinnabar/85 transition-colors hover:text-cinnabar"
         >
-          隐私政策 →
+          本地数据与隐私 →
         </Link>
       </section>
     </div>
+  );
+}
+
+function SectionTitle({ children }: { children: ReactNode }) {
+  return (
+    <h2 className="mb-3.5 flex items-center gap-2.5 font-serif-cn text-[19px] font-semibold tracking-[0.05em] text-ink/90 dark:text-dark-ink/90">
+      <span className="h-[22px] w-[3px] rounded-full bg-cinnabar" aria-hidden />
+      {children}
+    </h2>
   );
 }
 
@@ -364,7 +269,7 @@ function WeeklyBarChart({ stats }: { stats: DailyStats[] }) {
   const max = Math.max(1, ...days.map((d) => d.minutes));
   const dayLabels = ['一', '二', '三', '四', '五', '六', '日'];
   return (
-    <div className="mt-4 flex items-end gap-2 h-16">
+    <div className="mt-2 flex h-14 items-end gap-1.5">
       {days.map((d, i) => {
         const date = new Date(d.date);
         const dow = (date.getDay() + 6) % 7; // Mon=0
@@ -387,7 +292,7 @@ function WeeklyBarChart({ stats }: { stats: DailyStats[] }) {
             </div>
             <span
               className={[
-                'text-[9px] sm:text-[10px] tabular-nums',
+                'text-[13.5px] tabular-nums',
                 today ? 'text-cinnabar font-medium' : 'text-secondary dark:text-dark-secondary',
               ].join(' ')}
             >

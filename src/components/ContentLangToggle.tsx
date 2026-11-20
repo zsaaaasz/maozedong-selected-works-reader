@@ -33,7 +33,7 @@ export function ContentLangToggle() {
               'px-3 py-1.5 text-sm transition-colors duration-180',
               active
                 ? 'bg-ink text-paper dark:bg-dark-ink dark:text-dark-paper'
-                : 'bg-white/40 dark:bg-dark-ink/5 hover:bg-ink/5 dark:hover:bg-dark-ink/10',
+                : 'bg-white/40 dark:bg-dark-surface hover:bg-ink/5 dark:hover:bg-dark-ink/10',
             ].join(' ')}
           >
             <span className="sm:hidden">{l.short}</span>

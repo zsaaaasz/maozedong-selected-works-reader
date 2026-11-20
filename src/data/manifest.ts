@@ -17,8 +17,9 @@
  * spark-) and zero-padded 3-digit counters.
  */
 import type { ArticleMetadata } from '@/types';
+import { EXTRA_ARTICLES, SOURCE_ORDER } from './extra-manifest';
 
-export const ARTICLES: ArticleMetadata[] = [
+const CURATED_ARTICLES: ArticleMetadata[] = [
   {
     id: 'hunan-peasant-movement-1927',
     title: '湖南农民运动考察报告',
@@ -306,6 +307,9 @@ export const ARTICLES: ArticleMetadata[] = [
     situations: ['我快成功了', '我该不该收手', '我已经做了 80%', '我是不是该见好就收'],
   },
 ];
+
+export const ARTICLES: ArticleMetadata[] = [...CURATED_ARTICLES, ...EXTRA_ARTICLES]
+  .sort((a, b) => (SOURCE_ORDER[a.id] ?? Number.MAX_SAFE_INTEGER) - (SOURCE_ORDER[b.id] ?? Number.MAX_SAFE_INTEGER));
 
 /** Find an article by id. Returns undefined if not found. */
 export function getArticleMeta(id: string): ArticleMetadata | undefined {

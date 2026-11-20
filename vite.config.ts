@@ -71,17 +71,20 @@ export default defineConfig({
     aiMiddleware(),
     VitePWA({
       registerType: 'autoUpdate',
+      // No injected registration script: main.tsx only registers a service
+      // worker for the web build. The packaged Android app must never cache
+      // index.html, otherwise an update keeps loading asset names that the
+      // new APK no longer contains (blank screen).
+      injectRegister: null,
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         id: '/',
-        name: '毛选 · 多语言阅读器',
-        short_name: '毛选',
-        description: '安静、可信的《毛泽东选集》多语言阅读与思想研习空间。',
-        // Default to zh-CN for the install sheet / OS launcher name. The
-        // app's UI lang can still be flipped at runtime to English.
+        name: '毛泽东选集',
+        short_name: '毛泽东选集',
+        description: '离线阅读《毛泽东选集》，记录进度、书签和文字笔记。',
         lang: 'zh-CN',
-        theme_color: '#1D8C80',
-        background_color: '#F4F1EA',
+        theme_color: '#40564A',
+        background_color: '#F3F4EF',
         display: 'standalone',
         orientation: 'portrait-primary',
         categories: ['books', 'education'],
@@ -122,21 +125,6 @@ export default defineConfig({
             options: {
               cacheName: 'maobible-content',
               expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
-            },
-          },
-          {
-            // Google Fonts CSS
-            urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com',
-            handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'maobible-gfonts' },
-          },
-          {
-            // Google Fonts woff2 files
-            urlPattern: ({ url }) => url.origin === 'https://fonts.gstatic.com',
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'maobible-gfonts-files',
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
             },
           },
         ],

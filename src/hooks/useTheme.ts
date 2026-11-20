@@ -1,36 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
+import { applyTheme, readThemeMode, THEME_STORAGE_KEY, type ThemeMode } from '@/lib/theme';
 
-type Mode = 'light' | 'dark' | 'system';
-
-const STORAGE_KEY = 'maobible.theme';
-
-function applyTheme(mode: Mode) {
-  const isDark =
-    mode === 'dark' ||
-    (mode === 'system' &&
-      window.matchMedia('(prefers-color-scheme: dark)').matches);
-  document.documentElement.classList.toggle('dark', isDark);
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', isDark ? '#191918' : '#F4F1EA');
-  // Also update <meta name="apple-mobile-web-app-status-bar-style">
-  const appleMeta = document.querySelector(
-    'meta[name="apple-mobile-web-app-status-bar-style"]',
-  );
-  if (appleMeta) appleMeta.setAttribute('content', isDark ? 'black' : 'default');
-}
-
-export function useTheme(): [Mode, (m: Mode) => void] {
-  const [mode, setMode] = useState<Mode>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Mode | null;
-    return stored ?? 'system';
-  });
+export function useTheme(): [ThemeMode, (m: ThemeMode) => void] {
+  const [mode, setMode] = useState<ThemeMode>(() => readThemeMode());
 
   // Apply immediately on mount so the initial render matches stored/system
   // preference (otherwise we'd flash the wrong theme on first paint).
   useEffect(() => {
     applyTheme(mode);
-    localStorage.setItem(STORAGE_KEY, mode);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    localStorage.setItem(THEME_STORAGE_KEY, mode);
   }, [mode]);
 
   // React to system changes when in "system" mode
@@ -42,6 +20,6 @@ export function useTheme(): [Mode, (m: Mode) => void] {
     return () => mq.removeEventListener('change', onChange);
   }, [mode]);
 
-  const update = useCallback((m: Mode) => setMode(m), []);
+  const update = useCallback((m: ThemeMode) => setMode(m), []);
   return [mode, update];
 }
